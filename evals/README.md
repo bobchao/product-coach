@@ -18,6 +18,25 @@
 4. T8a 需要 okr-coach skill——已內建在 `fixtures/t8a-skills/`，runner 會
    自動裝進測試副本，不需另外安裝。
 
+## 模型分工
+
+整套評測有三個會耗 token 的角色，不要全部套同一個 tier：
+
+1. **被測 coach**（`run.sh` 實際跑對話的 `claude -p ... --model sonnet`）
+   ——維持 Sonnet，不要升級成 opus。這是正在測的東西本身，模型必須跟正式
+   環境一致，換掉就是測了另一個產品，所有歷史通過率基準也會失去對照意義。
+2. **模擬使用者**（`TEST-PLAN.md` 提出、`run.sh` 尚未實作的功能——現在
+   13 組都是寫死腳本台詞）——之後實作時預設用 **Haiku 4.5**。這個角色只是
+   照劇本走位不需要前沿推理能力，且是逐輪呼叫、跟對話輪數等比放大，是三個
+   角色裡最適合下放到最便宜 tier 的地方。
+3. **LLM judge**（第二層判定，見下）——預設用 **Opus**，刻意跟被測 coach
+   不同 tier。judge 是逐份 transcript 判定（一輪最多 13 次），輸入內容遠比
+   被測 coach session 短，用 Opus 只占整輪成本一小塊；同時滿足下方「避免
+   同源偏誤」原則，也呼應歷史基準裡本來就較不穩、屬於語氣/姿態質性判定的
+   組別（T4 L4 收尾、T6 過期求證、T10b 典範標註）。如果之後想再省，可以做
+   兩段式：先用 Haiku 對每份 transcript 快速初判，只有 FAIL 或不確定的才
+   送進 Opus 覆核；目前 judge 仍是人工執行，兩段式留給未來自動化時再做。
+
 ## 執行
 
 ```bash
@@ -27,7 +46,8 @@ ONLY="t4 t8b t10b" bash evals/run.sh   # 只跑子集（迴歸特定組別時省
 ```
 
 - 一輪 = 13 個 session（T1–T10，T8/T9/T10 含 A/B），分 3 波並行，約 5–6 分鐘，
-  約 20 次 API 呼叫、US$3–4（Sonnet）。
+  約 20 次 API 呼叫、US$3–4（Sonnet）——這是人工估算數字；每輪跑完會自動
+  產出 `REPORT.md`（見下方「執行報表」）給實測數字，之後應以實測為準。
 - 跑多輪求通過率時**依序跑**（避免 rate limit），例：
   ```bash
   for r in 1 2 3; do RUN_DIR=/tmp/coach-eval-r$r bash evals/run.sh; done
@@ -63,6 +83,35 @@ bash evals/assert.sh <RUN_DIR>
 **第三層：人工抽查**
 
 Bob 每次改 SOUL.md 後抽讀 2–3 份 transcript，校準 judge 有沒有漏。
+
+## 執行報表
+
+`run.sh` 收尾會自動跑 `evals/report.sh <RUN_DIR>`，輸出印到終端機同時存成
+`<RUN_DIR>/REPORT.md`。純解析 `turn*.jsonl`（每次 `claude -p` 呼叫的原始
+stream-json 輸出）與 `run.log`，**不呼叫任何 API**，所以可以隨時對舊的
+`RUN_DIR` 重跑，不會再花錢：
+
+```bash
+bash evals/report.sh <RUN_DIR>                      # 單輪
+bash evals/report.sh /tmp/coach-eval-r1 /tmp/coach-eval-r2 /tmp/coach-eval-r3   # 多輪加總
+EXPECTED_MODEL=haiku bash evals/report.sh <RUN_DIR> # 覆寫預期模型（預設 sonnet）
+```
+
+回答三件事：
+
+1. **模型是否如預期**：讀每個 turn 的 `modelUsage`（CLI 自己回報的、
+   每個實際用到的模型的 token/花費明細），跟 `EXPECTED_MODEL`（預設
+   `sonnet`，對照「模型分工」一節）比對，只要有一個 turn 出現非預期的
+   模型（fallback、或某個 skill/subagent 悄悄換了模型）就 `FAIL` 並列出
+   是哪個 session、哪個 turn、用了什麼模型；PASS 的模型同時列出 `$` 花費，
+   跟第 3 點的總花費互相印證。
+2. **花的時間**：兩個數字都給，意義不同——`run.log` 首尾時間戳算出的
+   **真實 wall-clock**（3 波平行，比累加數字短），以及所有 turn 的
+   `duration_api_ms` **加總**（等於「如果完全序列執行要花多久」，看得出
+   平行化省了多少）。
+3. **花費估算**：所有 turn 的 `total_cost_usd`（CLI 官方算好的美金花費）
+   加總；丟多個 `RUN_DIR` 進去（例如跑 3–5 輪求通過率時）會再加總成
+   「這次迴歸一共花多少錢」。
 
 ## 通過門檻與結果去向
 

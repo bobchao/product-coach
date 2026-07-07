@@ -89,4 +89,5 @@ for t in t8b t9b t10a t10b; do want $t && $t & done
 wait
 log "wave 3 done"
 log "=== ALL DONE ==="
+bash "$EVAL/report.sh" "$RUN" | tee "$RUN/REPORT.md"
 touch "$RUN/DONE"
