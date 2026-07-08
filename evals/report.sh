@@ -15,7 +15,7 @@ to_sec() { local IFS=:; set -- $1; echo $((10#$1*3600+10#$2*60+10#$3)); }
 
 scan_result_file() { # $1=jsonl $2=預期模型 $3=角色(coach|sim)；累加到全域計數器
   local f=$1 expect=$2 role=$3
-  local sess turnname result cost api_ms bad m
+  local sess turnname result cost api_ms bad note m m_cost is_trace
   sess=$(basename "$(dirname "$f")")
   turnname=$(basename "$f" .jsonl)
 
@@ -30,14 +30,24 @@ scan_result_file() { # $1=jsonl $2=預期模型 $3=角色(coach|sim)；累加到
     [ "$role" = sim ] && sim_cost=$(awk -v a="$sim_cost" -v b="$cost" 'BEGIN{printf "%.6f", a+b}')
 
     bad=""
+    note=""
     while IFS= read -r m; do
       [ -z "$m" ] && continue
       case "$m" in
-        *"$expect"*) ;;
-        *) bad="$bad $m" ;;
+        *"$expect"*) continue ;;
       esac
+      # 已知例外：CLI（2.1.x 實測）會在 session 啟動時用 haiku 做一次微量
+      # 內部輔助呼叫（約 $0.001）。成本低於 $0.005 的 haiku 用量列 NOTE
+      # 不列 FAIL——真正的模型錯置（fallback、subagent 換模型）成本遠高於此。
+      m_cost=$(echo "$result" | jq -r --arg m "$m" '.modelUsage[$m].costUSD // 0')
+      is_trace=0
+      case "$m" in
+        *haiku*) awk -v c="$m_cost" 'BEGIN{exit !(c < 0.005)}' && is_trace=1 ;;
+      esac
+      if [ "$is_trace" = 1 ]; then note="$note $m(\$$m_cost)"; else bad="$bad $m"; fi
     done < <(echo "$result" | jq -r '.modelUsage // {} | keys[]?')
 
+    [ -n "$note" ] && echo "NOTE  $sess/$turnname: 微量 CLI 輔助呼叫，不計為模型錯置 -$note"
     if [ -n "$bad" ]; then
       echo "FAIL  $sess/$turnname: 出現非預期模型 -$bad（預期含 \"$expect\"）"
       fail=1
