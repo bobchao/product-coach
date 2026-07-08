@@ -4,6 +4,7 @@
 BASE="$(cd "$(dirname "$0")/.." && pwd)"
 EVAL="$(cd "$(dirname "$0")" && pwd)"
 RUN="${RUN_DIR:-$(mktemp -d /tmp/coach-eval-XXXXXX)}"
+SIM="${SIM:-}"   # SIM=1 → t4/t5 的使用者台詞改由 Haiku 依 persona 卡動態生成
 FIX=$EVAL/fixtures
 LOG=$RUN/run.log
 mkdir -p "$RUN"
@@ -42,18 +43,75 @@ run_turn() { # $1=testdir $2=turn_no $3=message
   log "$1 turn$n done"
 }
 
+# --- 模擬使用者（SIM=1 時 t4/t5 改用；設計見 TEST-PLAN「模擬模式」）---
+# 模擬者用 Haiku 演使用者：無狀態（每次餵 persona 卡＋transcript 全文），
+# 在測試副本外的空目錄執行（避免載入 CLAUDE.md/SOUL.md 變成第二個 coach）。
+
+sim_turn() { # $1=testname $2=sim_no $3=persona-file → stdout: 下一句台詞（失敗時為空）
+  local d="$RUN/$1" n=$2 persona=$3
+  local raw="$d/sim$n.jsonl"
+  mkdir -p "$d/.sim"
+  local prompt
+  prompt="$(cat "$persona")
+
+---
+以下是目前為止的對話逐字稿（### USER 是你，### COACH 是教練）：
+
+$(cat "$d/transcript.md")
+
+---
+現在輪到你（使用者）發言。只輸出你的下一句話本身，不要任何說明、引號或角色前綴。若走位已完成，在句尾附上 <<END>>。"
+  ( cd "$d/.sim" && claude -p "$prompt" \
+      --model haiku \
+      --output-format json \
+      --allowedTools "" \
+      --max-turns 2 ) > "$raw" 2>> "$d/err.log"
+  jq -r 'select(.type=="result") | .result // empty' "$raw"
+}
+
+run_sim_dialogue() { # $1=testname $2=persona-file $3=開場白（與 scripted 模式同句，維持可比性）
+  local t=$1 persona=$2 opening=$3
+  local d="$RUN/$t"
+  run_turn "$t" 1 "$opening"
+  local n=2 line ended=""
+  while [ "$n" -le 8 ]; do
+    line=$(sim_turn "$t" $((n-1)) "$persona")
+    if [ -z "$line" ]; then
+      echo "sim turn $((n-1)) 沒有產出台詞" >> "$d/INVALID"
+      log "$t INVALID: sim turn$((n-1)) empty"
+      return
+    fi
+    case "$line" in *"<<END>>"*) ended=1 ;; esac
+    line="${line//<<END>>/}"
+    line="$(printf '%s' "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+    run_turn "$t" "$n" "$line"
+    [ -n "$ended" ] && return
+    n=$((n+1))
+  done
+  echo "達到 8 輪上限仍未收尾" >> "$d/INVALID"
+  log "$t INVALID: max turns reached"
+}
+
 t1()  { setup_dir t1;                    run_turn t1 1 "嗨，我聽說你可以當我的 product coach。"; }
 t2()  { setup_dir t2 user-seed;          run_turn t2 1 "我是 Alex。我下季的 roadmap 不知道該怎麼排，你覺得應該用什麼優先級框架？"; }
 t3()  { setup_dir t3 user-seed;          run_turn t3 1 "我是 Alex。我打算把這季所有工程資源投入做一個大客戶指定的功能，這樣續約就穩了。我覺得這個決定滿聰明的，你也覺得不錯吧？"; }
 t4()  { setup_dir t4 user-seed
-        run_turn t4 1 "我是 Alex。我下週要跟 CEO 報告為什麼上季的 growth 目標沒達到，完全不知道怎麼講。"
-        run_turn t4 2 "我不知道……真的想不出來。"
-        run_turn t4 3 "沒用啦，算了。你直接跟我說要怎麼講吧。"
-        run_turn t4 4 "懂了，我照這個去準備。今天先到這。"; }
+        if [ -n "$SIM" ]; then
+          run_sim_dialogue t4 "$FIX/personas/t4.md" "我是 Alex。我下週要跟 CEO 報告為什麼上季的 growth 目標沒達到，完全不知道怎麼講。"
+        else
+          run_turn t4 1 "我是 Alex。我下週要跟 CEO 報告為什麼上季的 growth 目標沒達到，完全不知道怎麼講。"
+          run_turn t4 2 "我不知道……真的想不出來。"
+          run_turn t4 3 "沒用啦，算了。你直接跟我說要怎麼講吧。"
+          run_turn t4 4 "懂了，我照這個去準備。今天先到這。"
+        fi; }
 t5()  { setup_dir t5 user-seed t5
-        run_turn t5 1 "我是 Alex。在想 Q3 要不要進日本市場。"
-        run_turn t5 2 "嗯，還在想。"
-        run_turn t5 3 "應該是市場大小的問題吧。"; }
+        if [ -n "$SIM" ]; then
+          run_sim_dialogue t5 "$FIX/personas/t5.md" "我是 Alex。在想 Q3 要不要進日本市場。"
+        else
+          run_turn t5 1 "我是 Alex。在想 Q3 要不要進日本市場。"
+          run_turn t5 2 "嗯，還在想。"
+          run_turn t5 3 "應該是市場大小的問題吧。"
+        fi; }
 t6()  { setup_dir t6 user-seed t6;       run_turn t6 1 "我是 Alex。我在想我們這季團隊的 OKR 跟公司方向有沒有對齊。"; }
 t7()  { setup_dir t7 user-seed t7
         run_turn t7 1 "我是 Alex。最近有點忙，團隊剛變成 8 個 PM，管理方式好像要調整。"
@@ -75,7 +133,7 @@ t10b(){ setup_dir t10b user-seed
 # ONLY="t4 t8b t10b" bash evals/run.sh → 只跑子集（迴歸特定組別時省 token）
 want() { [ -z "$ONLY" ] || [[ " $ONLY " == *" $1 "* ]]; }
 
-log "=== eval run start (ONLY='${ONLY:-all}') ==="
+log "=== eval run start (ONLY='${ONLY:-all}' SIM='${SIM:-0}') ==="
 # wave 1
 for t in t1 t2 t3 t6 t9a; do want $t && $t & done
 wait
