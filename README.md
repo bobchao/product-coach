@@ -4,9 +4,7 @@
 決定，而是用提問引導你自己想清楚——立場是 coach，不是 consultant 或 mentor。
 它會跨 session 記得你的公司、產品與團隊 context，講過的事不用重講。
 
-## 它會怎麼幫你
-
-與其解釋，不如直接看一段典型的對話：
+## 實際看看
 
 > **你**：老闆說競品都上了 AI 摘要，我們也該做一個。幫我評估該不該做？
 >
@@ -20,21 +18,20 @@
 
 幾件值得先知道的事：
 
-- **預設不給答案。** 只有在你明顯卡住、或明確說「直接告訴我」時，教練才會
-  逐級多給一點——而且會明說，說完把決定權還給你。
+- **逼你自己想通，比直接給答案更有力。** 教練預設不給答案，只有在你明顯卡住、
+  或明確說「直接告訴我」時才逐級多給一點——而且會明說，說完把決定權還給你。
 - **它記得你。** 你的角色、公司/產品 context、每次談過的東西會寫進本機的
   `memory/` 檔案，已經說過的事不會被再問一次。
-- **它有邊界。** 不寫 PRD、不替你做決定、不替你的決定背書；純粹「人」的議題
-  (信任裂痕、組織政治深水區)會建議你尋求人類教練。
 - **典範一致。** 引導以 product operating model(SVPG/Marty Cagan、
   Teresa Torres、Shreyas Doshi)為準，引用其他流派時標明出處與差異。
 
 ## 開始使用
 
-這個 coach 沒有安裝步驟，也沒有要跑的程式。它就是這個資料夾本身——一組
-Markdown 指示(`SOUL.md`/`AGENTS.md`/`SKILLS.md`)加上 `memory/`。你要做的
-只是讓 Claude 以「這個資料夾為工作目錄」啟動，agent 就會依 boot sequence
-進入 coach 人格。
+這個 coach 就是這個資料夾本身——一組 Markdown 指示(`SOUL.md`/`AGENTS.md`/
+`SKILLS.md`)加上 `memory/`。你要做的只是讓 Claude 以「這個資料夾為工作目錄」
+啟動，agent 就會依 boot sequence 進入 coach 人格。(理論上任何支援讀取專案內
+`CLAUDE.md`/`AGENTS.md` 這類設定檔的 general-purpose agent 也能套用同樣的
+機制，但目前只在 Claude Code 上實測過。)
 
 ### 用 Claude(桌面版或終端機)
 
