@@ -25,10 +25,15 @@
 1. **被測 coach**（`run.sh` 實際跑對話的 `claude -p ... --model sonnet`）
    ——維持 Sonnet，不要升級成 opus。這是正在測的東西本身，模型必須跟正式
    環境一致，換掉就是測了另一個產品，所有歷史通過率基準也會失去對照意義。
-2. **模擬使用者**（`TEST-PLAN.md` 提出、`run.sh` 尚未實作的功能——現在
-   13 組都是寫死腳本台詞）——之後實作時預設用 **Haiku 4.5**。這個角色只是
+2. **模擬使用者**（已實作，`SIM=1` 時 T4/T5 的使用者台詞改由模型依
+   `fixtures/personas/*.md` 的走位動態生成；其餘組別仍是寫死腳本台詞）
+   ——預設用 **Haiku 4.5**（`run.sh` 的 `--model haiku`）。這個角色只是
    照劇本走位不需要前沿推理能力，且是逐輪呼叫、跟對話輪數等比放大，是三個
-   角色裡最適合下放到最便宜 tier 的地方。
+   角色裡最適合下放到最便宜 tier 的地方。實作細節：模擬者在測試副本外的
+   空目錄執行（避免載入 SOUL 變成第二個 coach）、無狀態（每輪餵 persona
+   卡＋transcript 全文）、上限 8 輪，走位完成用 `<<END>>` 收尾；脫稿或
+   未收尾的 run 由 runner 標 `INVALID`（判定規則見 TEST-PLAN 的
+   「模擬模式」段落）。
 3. **LLM judge**（第二層判定，見下）——預設用 **Opus**，刻意跟被測 coach
    不同 tier。judge 是逐份 transcript 判定（一輪最多 13 次），輸入內容遠比
    被測 coach session 短，用 Opus 只占整輪成本一小塊；同時滿足下方「避免
@@ -43,7 +48,13 @@
 bash evals/run.sh                      # 結果在 mktemp 目錄（路徑見輸出）
 RUN_DIR=/tmp/coach-eval-r2 bash evals/run.sh   # 或自訂輸出目錄
 ONLY="t4 t8b t10b" bash evals/run.sh   # 只跑子集（迴歸特定組別時省 token）
+SIM=1 ONLY="t4 t5" bash evals/run.sh   # T4/T5 用 Haiku 模擬使用者（見「模型分工」2）
 ```
+
+- **SIM 模式的通過率是另一條基準線**：歷史基準（下方）是固定台詞測出來的，
+  兩者不可混算。先平行跑幾輪（scripted 與 sim 各自判定＋人工抽查模擬者
+  擬真度），校準夠了再討論把 sim 設為 T4/T5 預設。每輪 sim 增量成本
+  以 `REPORT.md` 的「模擬使用者小計」為準（估 < US$0.1）。
 
 - 一輪 = 13 個 session（T1–T10，T8/T9/T10 含 A/B），分 3 波並行，約 5–6 分鐘，
   約 20 次 API 呼叫、US$3–4（Sonnet）——這是人工估算數字；每輪跑完會自動
@@ -74,6 +85,10 @@ bash evals/assert.sh <RUN_DIR>
 **對照 `TEST-PLAN.md` 各組的「通過標準」與「失敗訊號」逐條判定**，
 每條要能引用 transcript 原文為證。輸出格式：每組 `✅ 通過 / ⚠️ 部分通過
 （缺哪一條）/ ❌ 失敗（違反哪一條）`，彙整成表。
+
+SIM 模式的 run 要**先過 validity gate 再判 coach**：模擬者脫稿或未收尾
+（目錄有 `INVALID` 檔，`report.sh` 也會列出）→ 該 run 不計入通過率分母，
+不算 coach FAIL。規則與 beat 錨定的判準見 TEST-PLAN 各組的「模擬模式」段落。
 
 判定時的既有決議（優先於 TEST-PLAN 字面）：
 - T1：onboarding 三題「一次全問」與「逐題問」都算通過（2026-07-06 決議）。
