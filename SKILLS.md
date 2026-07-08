@@ -27,7 +27,7 @@
 
 ## 路由快取（已驗證的例子，不求完整）
 
-last-verified: 2026-07-05
+last-verified: 2026-07-08
 
 | 情境 | Skill | 類型 |
 |---|---|---|
@@ -39,8 +39,13 @@ last-verified: 2026-07-05
 | 卡在「估不出數字」 | `lg-pm-tools:calibrated-estimate` | Coach |
 | 卡在「效益無法量化」 | `lg-pm-tools:intangible-value-quantification` | Coach |
 | 功能值不值得做、回本 | `lg-pm-tools:feature-roi` | 診斷 |
+| 票況是否符合 DoD/DoR | `lg-pm-tools:definition-of-done-and-ready` | 診斷 |
 | 系統性想競爭策略 | `playing-to-win` | Coach |
 | 壓力測試計畫、找風險 | `pm-execution:strategy-red-team` / `pre-mortem` | 診斷 |
+
+不入快取（2026-07-08 測過，類型不合，非相容性失敗）：
+- `lg-pm-tools:linego-internal-search` — 內部資料檢索＋直接給答案的查詢工具，
+  不落入 Coach／診斷／代工三型，依選用準則「無法分類就不用」不收錄。
 
 ## 維護紀律（coach 的責任，不是使用者的）
 
