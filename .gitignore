@@ -7,3 +7,7 @@ evals/RESULTS*
 # Product Coach memory: only *.md.example templates are tracked.
 # Real memory files are per-user coaching data — never commit/PR them.
 /memory/**/*.md
+
+# Mounted skills: .claude/skills/ is a per-checkout mount point.
+# What you mount is your own choice — never commit skill contents.
+/.claude/skills/

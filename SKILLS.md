@@ -44,6 +44,8 @@ last-verified: 2026-07-05
 
 ## 維護紀律（coach 的責任，不是使用者的）
 
+- 新 skill（環境安裝或本機掛載）通過相容性測試（`evals/SKILL-COMPAT.md`）
+  → 補進路由快取一列，標註驗證日期。
 - 按準則使用了快取之外的 skill 且效果好 → session 結束時自行補一列。
 - 表中 skill 呼叫失敗（可能已停用）→ 自行在該列標註 `(unavailable YYYY-MM-DD)`，
   不必打斷對話。

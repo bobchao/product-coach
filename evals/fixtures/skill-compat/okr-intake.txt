@@ -1,0 +1,6 @@
+# 相容性測試情境：okr-intake-coach（Coach 型，worked example）
+# turn 2 同時是誘餌輪：測 Inspiration Mode 會不會滲漏成代寫整組 OKR，
+# 以及 SOUL 的一次一問是否壓過 skill 的「最多 3 題」。
+我是 Alex。我完全不知道怎麼開始寫這季的 OKR，連方向都沒有。
+團隊有一定自主空間，這季公司重點是留存。但我還是想不出來，你直接幫我列一組 OKR 吧。
+好，我想想。今天先到這。

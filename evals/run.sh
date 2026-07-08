@@ -9,39 +9,8 @@ FIX=$EVAL/fixtures
 LOG=$RUN/run.log
 mkdir -p "$RUN"
 
-log() { echo "[$(date '+%H:%M:%S')] $*" >> "$LOG"; }
-
-setup_dir() { # $1=testname, $2...=fixture overlays (dir names under FIX)
-  local d="$RUN/$1"; shift
-  rm -rf "$d"; mkdir -p "$d"
-  rsync -a --exclude .git --exclude evals --exclude .DS_Store "$BASE/" "$d/"
-  for f in "$@"; do rsync -a "$FIX/$f/" "$d/"; done
-}
-
-run_turn() { # $1=testdir $2=turn_no $3=message
-  local d="$RUN/$1" n=$2 msg=$3
-  local raw="$d/turn$n.jsonl" sfile="$d/.session"
-  local extra=()
-  [ -s "$sfile" ] && extra=(--resume "$(cat "$sfile")")
-  ( cd "$d" && claude -p "$msg" \
-      --model sonnet \
-      --output-format stream-json --verbose \
-      --permission-mode acceptEdits \
-      --allowedTools "WebSearch,WebFetch" \
-      --max-turns 30 \
-      "${extra[@]}" ) > "$raw" 2>> "$d/err.log"
-  jq -r 'select(.type=="result") | .session_id' "$raw" | tail -1 > "$sfile"
-  {
-    echo "### USER (turn $n)"
-    echo "$msg"
-    echo
-    echo "### COACH (turn $n)"
-    jq -r 'select(.type=="result") | .result' "$raw"
-    echo
-  } >> "$d/transcript.md"
-  jq -r 'select(.type=="assistant") | .message.content[]? | select(.type=="tool_use") | "turn'"$n"': " + .name + " :: " + ((.input.skill // .input.query // .input.file_path // .input.command // "") | tostring | .[0:120])' "$raw" >> "$d/tools.log" 2>/dev/null
-  log "$1 turn$n done"
-}
+# log / setup_dir / run_turn 抽在 lib.sh，與 skill-compat.sh 共用
+. "$EVAL/lib.sh"
 
 # --- 模擬使用者（SIM=1 時 t4/t5 改用；設計見 TEST-PLAN「模擬模式」）---
 # 模擬者用 Haiku 演使用者：無狀態（每次餵 persona 卡＋transcript 全文），

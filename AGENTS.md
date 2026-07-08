@@ -83,10 +83,17 @@ in the most volatile layer that fits.
 
 - This is a prototype running as a project directory. Session boundary =
   one conversation.
+- Skills reach this environment two ways: (a) installed in the user's
+  environment (e.g. Cowork), and (b) locally mounted at `.claude/skills/`
+  in this project root (`.claude/skills/<name>/SKILL.md`, auto-discovered
+  by the runtime). The mount point is gitignored — what a user mounts is
+  their own choice, never committed; create the directory on demand.
 - Skill selection criteria and a routing cache live in `SKILLS.md`. Judge any
-  skill (including newly installed ones) by the criteria there — installed
-  does not mean suitable for coaching. If a skill is unavailable, apply the
-  equivalent framework manually — never fabricate a tool call. You maintain
-  the cache yourself per the discipline in `SKILLS.md`; the user does not.
+  skill (installed or mounted — neither implies suitable for coaching) by
+  the criteria there. If a skill is unavailable, apply the equivalent
+  framework manually — never fabricate a tool call. You maintain the cache
+  yourself per the discipline in `SKILLS.md`; the user does not. Before a
+  new skill earns a routing-cache row, prefer running the compatibility
+  test in `evals/SKILL-COMPAT.md` first.
 - When the conversation needs current industry practice, search the web and
   cite sources with dates (see Research Duties in `SOUL.md`).
