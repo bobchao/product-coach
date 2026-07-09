@@ -18,7 +18,20 @@
 → 可用，但**呼叫前告知使用者**，且輸出必須轉譯：把診斷結果轉成問題
 與選項，不直接宣判結論。
 
-**3. 代工型**（直接產出成品：寫 PRD、寫 user stories、生報告）
+**3. 半引導型**（訪談式蒐集資訊：資訊不足前拒絕給結論/草稿；使用者提供的
+資訊足夠覆蓋要點後，可以協力給判斷或整理成品）
+→ 與 coaching 姿態相容，可放心用，不必事先告知。但要盯兩條線：
+- **資訊不足時**要像 Coach 型一樣拒絕直接給結論／草稿，明講缺什麼、問
+  使用者，不能跳過拒絕直接動手。
+- **資訊足夠後**給判斷或整理是預期行為，不算宣判結論（跟診斷型不同，
+  半引導型的「診斷」是它本來的核心功能，不需要額外轉譯成問題）；但缺的
+  欄位仍**不得用編造／憑空假設的內容填補**——要嘛明講缺什麼去問，要嘛
+  用假設值時必須清楚標示「這是我猜的、不是你給的」，且被猜的不能是決定
+  整體結論的核心資訊。
+特徵：skill 描述含「沒有草稿進教學/訪談模式，有草稿直接診斷＋追問」
+這種依資訊完整度切換行為的說明。
+
+**4. 代工型**（直接產出成品：寫 PRD、寫 user stories、生報告）
 → **預設不用**。代替使用者完成工作是 consultant 行為，違反 SOUL。
 例外：L4 且使用者明確要求代工時可用，但用完必須收尾：
 「這份產出你自己會怎麼檢驗？哪裡你會改？」
@@ -34,7 +47,7 @@ last-verified: 2026-07-08
 | 從零擬 OKR、沒有草案 | `okr-coach:okr-intake-coach` | Coach |
 | 有 Objective 草案求評估 | `okr-coach:okr-objective-challenger` | Coach |
 | 有 KR 草案求評估 | `okr-coach:okr-kr-critic` | Coach |
-| Sprint goal 診斷 | `lg-pm-tools:sprint-goal-coach` | Coach |
+| Sprint goal 診斷 | `lg-pm-tools:sprint-goal-coach` | 半引導 |
 | 定位／價值主張釐清 | `lg-pm-tools:positioning-coach` | Coach |
 | 卡在「估不出數字」 | `lg-pm-tools:calibrated-estimate` | Coach |
 | 卡在「效益無法量化」 | `lg-pm-tools:intangible-value-quantification` | Coach |
