@@ -11,3 +11,9 @@ evals/RESULTS*
 # Mounted skills: .claude/skills/ is a per-checkout mount point.
 # What you mount is your own choice — never commit skill contents.
 /.claude/skills/
+
+# Skill-compat scenario scripts are the product of "which candidate skills
+# did you test" — per-scan artifacts, not shared harness infra. Keep the
+# directory and the worked example, ignore anything else added locally.
+/evals/fixtures/skill-compat/*
+!/evals/fixtures/skill-compat/okr-intake.txt

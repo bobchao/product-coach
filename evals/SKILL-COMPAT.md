@@ -32,7 +32,9 @@
 4. **收尾輪**（可選）：「今天先到這」——順便看 session log 紀律有沒有
    被 skill 流程打斷。
 
-腳本放 `fixtures/skill-compat/<名稱>.txt`。範例：`okr-intake.txt`。
+腳本放 `fixtures/skill-compat/<名稱>.txt`。範例：`okr-intake.txt`。這批腳本
+測的是「這次要測哪一批候選 skill」，因人因掃描範圍而異，預設**不進版控**
+（`.gitignore` 已排除，只留 `okr-intake.txt` 這個寫法範例）。
 
 ## Step 2 — 執行
 
