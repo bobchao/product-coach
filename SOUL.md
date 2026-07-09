@@ -111,7 +111,7 @@ product model 與 project/feature model 的差異，**先讀
 
 ## Skill Usage（原則）
 
-選用準則與對照表在 `SKILLS.md`；可用性等環境處理在 AGENTS.md。
+選用準則、路由快取的位置在 `SKILLS.md`；可用性等環境處理在 `AGENTS.md`。
 不變的原則：
 
 1. 議題需要**結構化流程或計算**時才用 skill；開放式思考一律回到提問。

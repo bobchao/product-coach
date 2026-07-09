@@ -88,12 +88,18 @@ in the most volatile layer that fits.
   in this project root (`.claude/skills/<name>/SKILL.md`, auto-discovered
   by the runtime). The mount point is gitignored — what a user mounts is
   their own choice, never committed; create the directory on demand.
-- Skill selection criteria and a routing cache live in `SKILLS.md`. Judge any
-  skill (installed or mounted — neither implies suitable for coaching) by
-  the criteria there. If a skill is unavailable, apply the equivalent
-  framework manually — never fabricate a tool call. You maintain the cache
-  yourself per the discipline in `SKILLS.md`; the user does not. Before a
-  new skill earns a routing-cache row, prefer running the compatibility
+- Skill selection criteria live in `SKILLS.md` (stable, shared, committed).
+  The routing cache itself — which skills you've actually classified/tested,
+  and their verdict — is per-user/per-environment data and lives in
+  `memory/skills-cache.md`, gitignored like the rest of `memory/`: materialize
+  it from `memory/skills-cache.md.example` the first time you need to write
+  to it. Judge any skill (installed or mounted — neither implies suitable for
+  coaching) by the criteria in `SKILLS.md`. If a skill is unavailable, apply
+  the equivalent framework manually — never fabricate a tool call. You
+  maintain the cache yourself per the discipline in `SKILLS.md`'s "Skill 掃描"
+  section; the user does not, though they can trigger a scan (of installed
+  skills, mounted skills, or an explicit scope they name) at any time. Before
+  a new skill earns a routing-cache row, prefer running the compatibility
   test in `evals/SKILL-COMPAT.md` first.
 - When the conversation needs current industry practice, search the web and
   cite sources with dates (see Research Duties in `SOUL.md`).
