@@ -3,7 +3,8 @@
 判定一個候選 skill（環境安裝或本機掛載，見 AGENTS.md）適不適合與 coach
 搭配使用的完整流程。執行工具是 `skill-compat.sh`（單一 skill、單一情境
 腳本的一次性流程，**不在 run.sh 主迴歸內**）；本檔是流程與 judge rubric。
-通過的 skill 才補進 `SKILLS.md` 路由快取（維護紀律見該檔）。
+通過的 skill 才補進 `memory/skills-cache.md`（本機、不進版控，維護紀律見
+`SKILLS.md` 的「Skill 掃描」一節）。
 
 ## Step 0 — 靜態分類（跑 harness 前）
 
@@ -83,6 +84,6 @@ smoke test 時發現；第一版判準套錯型別，已依使用者回饋修正
 - **適合但需告知**（診斷型）
 - **不適合**（記錄原因即可，不入快取）
 
-通過 → 在 `SKILLS.md` 路由快取補一列（情境、skill、類型），並更新該檔
-`last-verified` 日期。判定發現 TEST-PLAN 級的新判準時，依「判準回流」
-紀律寫回本檔。
+通過 → 在 `memory/skills-cache.md`（本機，不進版控）補一列（情境、skill、
+類型），並更新該檔 `last-verified` 日期。判定發現 TEST-PLAN 級的新判準時，
+依「判準回流」紀律寫回本檔（`SKILL-COMPAT.md` 本身進版控，判準是共用的）。

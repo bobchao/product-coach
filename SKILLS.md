@@ -1,8 +1,10 @@
-# Skill 選用準則與路由快取
+# Skill 選用準則
 
-<!-- 本檔分兩部分：
-     「選用準則」是穩定的判斷邏輯——面對任何 skill（含新安裝的）都用它判斷。
-     「路由快取」只是已驗證的例子，不求完整，由 coach 使用後自行增補。
+<!-- 本檔只放「選用準則」——穩定的判斷邏輯，面對任何 skill（含新安裝的）
+     都用它判斷，全體共用、進版控。
+     路由快取（哪個 skill 測起來屬於哪一型、適不適合）是因人因環境而異的
+     資料，不共用、不進版控，實際內容在 `memory/skills-cache.md`（見本檔
+     「Skill 掃描」一節）。
      使用時機的原則見 SOUL.md 的 Skill Usage 一節。 -->
 
 ## 選用準則
@@ -38,45 +40,37 @@
 
 無法分類或拿不準時：不用，回到提問。
 
-## 路由快取（已驗證的例子，不求完整）
+## Skill 掃描（怎麼建立/更新本機路由快取）
 
-last-verified: 2026-07-09
+路由快取存在 `memory/skills-cache.md`（本機、gitignored，不進版控，
+跟 `memory/context/*.md` 同一套 materialize 機制：第一次要寫入時，
+若真實檔案不存在，先從 `memory/skills-cache.md.example` 複製結構出來
+再填值）。分兩種頻率：
 
-| 情境 | Skill | 類型 |
-|---|---|---|
-| 從零擬 OKR、沒有草案 | `okr-coach:okr-intake-coach` | Coach |
-| 有 Objective 草案求評估 | `okr-coach:okr-objective-challenger` | Coach |
-| 有 KR 草案求評估 | `okr-coach:okr-kr-critic` | Coach |
-| Sprint goal 診斷 | `lg-pm-tools:sprint-goal-coach` | 半引導 |
-| 定位／價值主張釐清 | `lg-pm-tools:positioning-coach` | Coach |
-| 卡在「估不出數字」 | `lg-pm-tools:calibrated-estimate` | Coach |
-| 卡在「效益無法量化」 | `lg-pm-tools:intangible-value-quantification` | Coach |
-| 功能值不值得做、回本 | `lg-pm-tools:feature-roi` | 診斷 |
-| 票況是否符合 DoD/DoR | `lg-pm-tools:definition-of-done-and-ready` | 診斷 |
-| 系統性想競爭策略 | `playing-to-win` | Coach |
-| 壓力測試計畫、找風險 | `pm-execution:strategy-red-team` / `pre-mortem` | 診斷 |
+**1. 輕量分類**（隨時、對話中）：遇到快取裡沒有的 skill、且情境用得到時，
+讀它的 `SKILL.md`，照上面的選用準則做靜態分類（不用跑 harness），把
+判斷結果補一列進 `memory/skills-cache.md`。
 
-不入快取（2026-07-08 測過，類型不合，非相容性失敗）：
-- `lg-pm-tools:linego-internal-search` — 內部資料檢索＋直接給答案的查詢工具，
-  不落入 Coach／診斷／半引導／代工四型，依選用準則「無法分類就不用」不收錄。
-
-**2026-07-09 正式三輪判定**（`sprint-goal-coach`、`positioning-coach`，
-補跑到 ≥3 輪，判定依據見 `SKILL-COMPAT.md` 判準補充）：
-- `sprint-goal-coach`（半引導型）：3/3 輪一致——資訊足夠後在誘餌輪給「不及格」
-  判斷＋具體理由，且全程沒有編造使用者未提供的細節，只根據已給的三項工作
-  內容推理。**適合**。
-- `positioning-coach`（Coach 型）：3/3 輪都在誘餌輪生出帶標記的猜測草稿
-  （每輪清楚列出「這幾項是我猜的」），沒有隱藏編造成事實。3 輪之間對「核心
-  決定性欄位（如差異化）該不該猜」的處理不完全一致——有時猜了但標記、有時
-  直接留白／標「待補」（留白的處理更好，因為那是決定整句定位的關鍵欄位，
-  猜錯的代價比其他欄位高）。**適合**，但下次迴歸可留意這條一致性，`SKILL.md`
-  若能明確要求「核心差異化欄位缺資訊時一律留白，不用猜測值」會更穩。
+**2. 全量掃描**（使用者主動要求時，例如「掃一下我環境內的 skill」或指定
+範圍如「幫我測 XXX 這個 repo 裡的 skills」）：
+1. 列出候選 skill，來源兩處：
+   - 環境已安裝的 skill → 用 `ListSkills` 工具列出
+   - 本機掛載的 skill → 列 `.claude/skills/*/SKILL.md`
+   - 使用者指定範圍（例如某個外部 skill 包）→ 以使用者提供的路徑/清單為準
+2. 逐一讀 `SKILL.md`，照選用準則做靜態分類。
+3. 分類有疑慮、或使用者想要更高信心時，才用 `evals/skill-compat.sh` 跑
+   正式相容性測試（流程見 `evals/SKILL-COMPAT.md`）——這是需要 `claude`
+   CLI 登入、會產生真實 API 成本的重工具，不是每次掃描都要跑，預設只做
+   靜態分類就夠。
+4. 掃描結果一律寫進 `memory/skills-cache.md`（不進版控），並依下面的
+   維護紀律更新 `last-verified`。
 
 ## 維護紀律（coach 的責任，不是使用者的）
 
 - 新 skill（環境安裝或本機掛載）通過相容性測試（`evals/SKILL-COMPAT.md`）
-  → 補進路由快取一列，標註驗證日期。
+  → 補進 `memory/skills-cache.md` 一列，標註驗證日期。
 - 按準則使用了快取之外的 skill 且效果好 → session 結束時自行補一列。
 - 表中 skill 呼叫失敗（可能已停用）→ 自行在該列標註 `(unavailable YYYY-MM-DD)`，
   不必打斷對話。
-- 使用者只需偶爾 review 本檔，不需要在安裝/停用時同步維護。
+- 使用者只需偶爾 review `memory/skills-cache.md`，不需要在安裝/停用時
+  同步維護。
