@@ -38,8 +38,9 @@ description: |
 
 1. 執行環境有持久記憶機制（例如專案的 memory 目錄與其索引）→
    照該機制保存與載入；環境對本 Skill 的資料位置另有規定時，照環境的。
-2. 沒有 → 詢問使用者要存哪裡（建議目前專案內的 markdown，如
-   `growth-journey.md`），照 `references/journey-template.md` 建檔；
+2. 沒有 → 直接存在目前的工作目錄（如 `growth-journey.md`），照
+   `references/journey-template.md` 建檔——不用先問存哪，寫入時告知
+   存了什麼、存在哪即可；使用者指定其他位置時照使用者的。
    自定義構面集同理，用 `references/dimensions-template.md`。
 3. 無法寫檔的環境 → session 結尾輸出完整的 journey markdown 請使用者
    自行保存，下次貼回即可續走。

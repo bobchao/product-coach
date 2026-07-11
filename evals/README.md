@@ -70,6 +70,24 @@ bash evals/skill-compat.sh <skill-dir> <scenario-file>
 流程與 judge rubric 見 `SKILL-COMPAT.md`；同樣吃 claude CLI 登入態
 （前置條件同上）。
 
+### Skill 獨立運作測試（單獨流程，不在主迴歸內）
+
+驗證一個 skill 抽離本 repo 後能否自力運作（可攜性宣稱的行為驗證，
+與 skill-compat 相反：compat 測「跟 coach 搭配」，standalone 測
+「完全沒有 coach 時」）。測試副本是裸環境——沒有 SOUL/AGENTS/memory，
+只有 skill 本身：
+
+```bash
+bash evals/skill-standalone.sh .claude/skills/pm-growth-coach \
+  evals/fixtures/growth-standalone/basic.txt
+```
+
+第一層程式斷言：無認證錯誤、skill 在裸環境有觸發、journey 直接寫進
+工作目錄（skill 不得依賴宿主記憶機制，也不必先問使用者存哪）。
+第二層 judge 檢查項印在輸出的 `STANDALONE.md`。首選情境腳本
+`fixtures/growth-standalone/basic.txt` 是 first-party harness，進版控
+（與 skill-compat 的個人掃描腳本不同）。同樣跑 3 輪以上、≥80% 才算綠。
+
 - 一輪 = 13 個 session（T1–T10，T8/T9/T10 含 A/B），分 3 波並行，約 5–6 分鐘，
   約 20 次 API 呼叫、US$3–4（Sonnet）——這是人工估算數字；每輪跑完會自動
   產出 `REPORT.md`（見下方「執行報表」）給實測數字，之後應以實測為準。
