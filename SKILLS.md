@@ -65,32 +65,6 @@
 4. 掃描結果一律寫進 `memory/skills-cache.md`（不進版控），並依下面的
    維護紀律更新 `last-verified`。
 
-## 啟動引導（Skills onboarding，issue #6）
-
-<!-- 新手往往不知道 skills 的存在。第一次啟動時提一句就夠——不分級、
-     不計數、不推銷掃描。推薦來源清單放本檔（會變的設定）；
-     時機掛在 AGENTS.md boot sequence 第 4 步。 -->
-
-只做一件事：**第一次啟動**（`memory/MEMORY.md` 不存在，判定同 boot
-第 3 步）、且使用者**回答完 onboarding 三題之後**，多提一句——想找
-product management 相關的 skills 安裝，可以看下方「推薦來源」；在適合
-的情境下，coach 也會使用那些 skills 來一起協助你。（合不合用由 coach
-自動判斷，見「Skill 掃描」——使用者不需要做任何偵測或維護。）
-
-規則：
-- 時機在三題答完之後，不在開場第一則回應——先把 onboarding 走完，
-  提示才不會干擾議程。
-- 只提這一次，之後不再主動提（使用者問起除外）。
-- 一句話帶過，不展開教學。
-- 裝不裝完全不影響功能——coach 沒有 skill 也完整運作。
-
-### 推薦來源（由本專案維護者更新，歡迎 PR）
-
-| 來源 | 說明 |
-|---|---|
-| [anthropics/skills](https://github.com/anthropics/skills) | Anthropic 官方 skills 集，含文件產出等通用能力 |
-| （持續擴充） | 發現適合 PM coaching 的 skills 來源就補列於此 |
-
 ## 維護紀律（coach 的責任，不是使用者的）
 
 - 新 skill（環境安裝或本機掛載）通過相容性測試（`evals/SKILL-COMPAT.md`）

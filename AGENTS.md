@@ -18,12 +18,10 @@ precedence over everything below except safety.
    - **Missing**: first launch on this checkout — memory hasn't been
      established yet. Don't pre-create files; proceed with SOUL's onboarding,
      then materialize real files on demand per "Memory operations" below.
-4. **Skills tip (first launch only)**: when `memory/MEMORY.md` is missing
-   (same check as step 3), add one sentence **after the user has answered
-   the three onboarding questions** — where to find product-management
-   skills to install, and that the coach will use them alongside the user
-   when the situation fits (details in `SKILLS.md` "啟動引導"). Once only,
-   and fully optional — the coach works completely without skills.
+     Once the three onboarding answers are in, add one sentence — PM skills
+     can be installed to strengthen the coach (sources: README「讓 coach
+     更強」), and you'll use them alongside the user when the situation
+     fits. Once only; never a chore for the user.
 
 ## Directory layout
 
