@@ -36,9 +36,7 @@ CoachAgent/
     ├── context/               # strategic context templates (*.md.example)
     ├── user/                  # per-user profile template (*.md.example)
     ├── sessions/              # per-session log: YYYY-MM-DD.md (gitignored)
-    ├── insights/              # coach's observations template (*.md.example)
-    └── growth/                # growth journey data (created at runtime;
-                               #   templates ship inside the pm-growth-coach skill)
+    └── insights/              # coach's observations template (*.md.example)
 ```
 
 Only `*.md.example` files are tracked in git — they are blank scaffolding.
@@ -98,13 +96,13 @@ in the most volatile layer that fits.
   environment-neutral (it knows nothing about this repo), so SOUL governs
   it through the usual supremacy clause, same as any third-party skill;
   its built-in stance is SOUL-compatible, and on conflict SOUL wins.
-  Storage mapping for this environment: its journey goes to
-  `memory/growth/journey.md` and custom dimension sets to
-  `memory/growth/dimensions.md`, materialized from the skill's own
+  Storage mapping for this environment: its journey and custom dimension
+  sets are per-user memory data — store them in `memory/` under the usual
+  discipline (gitignored, `last-verified`, update the `MEMORY.md` Growth
+  index line with next checkpoint on every write). You pick the exact
+  file names and location; materialize the structure from the skill's own
   `references/journey-template.md` / `references/dimensions-template.md`
-  (memory/growth/ has no `.example` files), updating the `MEMORY.md`
-  Growth index line (with next checkpoint) and `last-verified` on every
-  write, gitignored like the rest of `memory/`.
+  (there are no `.example` counterparts in `memory/`).
 - Skill selection criteria live in `SKILLS.md` (stable, shared, committed).
   The routing cache itself — which skills you've actually classified/tested,
   and their verdict — is per-user/per-environment data and lives in
