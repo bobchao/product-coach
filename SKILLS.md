@@ -65,6 +65,73 @@
 4. 掃描結果一律寫進 `memory/skills-cache.md`（不進版控），並依下面的
    維護紀律更新 `last-verified`。
 
+## 啟動引導（Skills onboarding，issue #6）
+
+<!-- 新手往往不知道 skills 的存在，無法發揮 coach 的完整潛力。啟動時依
+     安裝數量給差異化引導。門檻與推薦清單是會變的設定，放本檔；
+     boot 時機掛在 AGENTS.md 的 boot sequence 第 4 步。 -->
+
+**門檻值：3**（含以上算情境 B）。計數方式同「Skill 掃描」的候選來源：
+環境已安裝（`ListSkills`）＋本機掛載（`.claude/skills/*/SKILL.md`），
+去重後的總數。門檻是初始假設，依真實使用調整——改這個數字不需要動
+其他檔案。
+
+**時機與頻率（不騷擾原則）**：
+
+- 引導只在 session 開場、與議程確認**同一則回應**裡帶一小段，不獨佔
+  開場；使用者開場就有明確議題時，議程優先，引導壓縮成一句或省略、
+  留到收尾再提。
+- 給過一次（含使用者選擇略過）就記進 `memory/skills-cache.md` 的
+  `onboarding` 欄（日期＋當時數量＋shown/skipped）。之後只有兩種情況
+  再提：數量跨越門檻（情境變了），或使用者主動問起。
+- 所有情境都提供「略過，先繼續」，且略過不影響任何功能——coach 沒有
+  skill 也完整運作。
+
+### 情境 A：數量 < 門檻（剛起步）
+
+一段話講三件事，不展開長文：
+
+1. 目前安裝的 skills 不多，coach 不裝 skill 也能完整運作，但結構化
+   流程類議題（OKR 品質診斷、校準估計、定位訪談……）有合適的 skill
+   會更有力。
+2. 給下方「推薦清單」的 Skills 來源，讓使用者自行挑選安裝。
+3. 明講**相容性由 coach 自動處理**：使用者裝了什麼，coach 會在用到時
+   照選用準則自動分類（見「Skill 掃描」的輕量分類），不需要使用者
+   執行任何偵測或維護動作。這句是講給使用者聽的，目的是降低心理負擔
+   ——絕不把相容性偵測變成使用者的功課。
+
+### 情境 B：數量 ≥ 門檻（有一定基礎）
+
+1. 對照下方「推薦清單」，點出使用者還沒裝、但與 coaching 情境高度
+   相關的項目，各用一句話說明用途與適用情境。
+2. 提議做一次全量掃描（流程見「Skill 掃描」）：靜態分類已安裝的
+   skills，說明哪些與 coaching 契合（coach 型／半引導型）、哪些預設
+   不用（代工型），結果寫進路由快取。掃描是**提議**，經同意才執行
+   ——但執行本身全自動，不需要使用者做任何事。
+
+### 推薦清單（由本專案維護者更新，歡迎 PR）
+
+**Skills 來源（情境 A 用）**：
+
+| 來源 | 說明 |
+|---|---|
+| [anthropics/skills](https://github.com/anthropics/skills) | Anthropic 官方 skills 集，含文件產出等通用能力 |
+| （持續擴充） | 發現適合 PM coaching 的 skills 來源就補列於此 |
+
+**與 coaching 情境相關的已知 skills（情境 B 用；出自 DESIGN.md §7.2 盤點）**：
+
+| Skill | 對應情境 |
+|---|---|
+| okr-coach:okr-intake-coach | 從零開始擬 OKR 的引導訪談 |
+| okr-coach:okr-objective-challenger | O 草案品質挑戰 |
+| okr-coach:okr-kr-critic | KR 品質診斷 |
+| lg-pm-tools:sprint-goal-coach | Sprint goal 診斷 |
+| lg-pm-tools:positioning-coach | 定位釐清（訪談式） |
+| playing-to-win | 策略五問（互動引導式） |
+
+本專案日後自製的 skills 發佈後也列在這裡。清單只是推薦起點——實際
+能不能用、適不適合，仍以選用準則與你環境的路由快取判定為準。
+
 ## 維護紀律（coach 的責任，不是使用者的）
 
 - 新 skill（環境安裝或本機掛載）通過相容性測試（`evals/SKILL-COMPAT.md`）

@@ -18,6 +18,10 @@ precedence over everything below except safety.
    - **Missing**: first launch on this checkout — memory hasn't been
      established yet. Don't pre-create files; proceed with SOUL's onboarding,
      then materialize real files on demand per "Memory operations" below.
+4. **Skills startup check**: run the startup guidance defined in `SKILLS.md`
+   ("啟動引導" section — threshold, scenario A/B, anti-nag rules all live
+   there). The guidance is always skippable and never displaces the user's
+   opening agenda.
 
 ## Directory layout
 

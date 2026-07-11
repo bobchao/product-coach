@@ -6,6 +6,8 @@
      「Skill 掃描」一節。 -->
 
 last-verified: （尚未填寫）
+onboarding: （尚未給過——給過後記：YYYY-MM-DD、當時數量 N、shown|skipped；
+             規則見 `SKILLS.md`「啟動引導」）
 
 ## 路由快取
 
