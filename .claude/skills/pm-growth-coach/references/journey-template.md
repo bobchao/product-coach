@@ -1,16 +1,16 @@
-# 成長 Journey（本機，不進版控）
+# 成長 Journey
 
-<!-- 一位使用者一份。完整盤點與每次回訪後由 coach 更新；
-     流程與節奏見 .claude/skills/pm-growth-coach/。
-     寫入後同步更新 MEMORY.md 的 Growth 索引行（含 next checkpoint）。 -->
+<!-- 本檔為模板：由 pm-growth-coach 依 SKILL.md「Journey 儲存」的規則，
+     複製此結構到實際存放位置後填寫。一位使用者一份；完整盤點與
+     每次回訪後更新。內容是個人成長紀錄，不應提交進版控或對外分享。 -->
 
 last-verified: （尚未填寫）
 
 ## 構面集
 
-（default ＝ skill 內建八構面；自定義時寫 `memory/growth/dimensions.md`
-並在此註記啟用日期。中途切換構面集要在「盤點紀錄」留一行切換註記，
-切換前後的分數不互相比較。）
+（default ＝ skill 內建八構面；自定義時依 dimensions-template.md 另建
+構面檔並在此註記啟用日期。中途切換構面集要在「盤點紀錄」留一行切換
+註記，切換前後的分數不互相比較。）
 
 ## 盤點紀錄
 

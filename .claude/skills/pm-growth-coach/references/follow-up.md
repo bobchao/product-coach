@@ -1,7 +1,7 @@
 # 回訪與 setback playbook
 
-回訪前必做：讀 `memory/growth/journey.md`。開口的第一句從上次的約定接起，
-不重新自我介紹、不重跑診斷。
+回訪前必做：讀 journey 紀錄（位置見 SKILL.md 的「Journey 儲存」）。
+開口的第一句從上次的約定接起，不重新自我介紹、不重跑診斷。
 
 ## 三層節奏
 
@@ -50,9 +50,9 @@ Setback 回訪的 journey 紀錄要寫「學到什麼、計畫怎麼改」，
 
 ## 回訪的主動性
 
-- 收尾時一定把 next checkpoint 日期寫進 journey 與 MEMORY.md 索引行——
-  下次 session 開機讀 MEMORY.md 時，過期的 checkpoint 就是你主動提起
-  回訪的依據。
+- 收尾時一定把 next checkpoint 日期寫進 journey（執行環境有記憶索引
+  機制的話一併更新）。環境會自動載入記憶時，過期的 checkpoint 就是你
+  主動提起回訪的依據；不會的話，成長話題一出現就先查 journey。
 - 使用者帶著別的議題來、而 checkpoint 已過期時：先處理他的議程
   （議程永遠由使用者設定），收尾時才輕輕帶一句「另外，我們上次約的
   成長 check-in 過期了，要約個時間嗎？」不劫持議程。
