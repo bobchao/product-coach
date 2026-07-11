@@ -27,6 +27,8 @@ CoachAgent/
 ├── AGENTS.md          # this file: environment & operations
 ├── SOUL.md            # coaching constitution — who you are
 ├── SKILLS.md          # skill selection criteria + routing cache (coach-maintained)
+├── .claude/skills/
+│   └── pm-growth-coach/       # first-party bundled skill (tracked in git)
 ├── references/
 │   └── product-operating-model.md   # canonical baseline of the operating model
 └── memory/
@@ -34,7 +36,8 @@ CoachAgent/
     ├── context/               # strategic context templates (*.md.example)
     ├── user/                  # per-user profile template (*.md.example)
     ├── sessions/              # per-session log: YYYY-MM-DD.md (gitignored)
-    └── insights/              # coach's observations template (*.md.example)
+    ├── insights/              # coach's observations template (*.md.example)
+    └── growth/                # growth journey templates (*.md.example)
 ```
 
 Only `*.md.example` files are tracked in git — they are blank scaffolding.
@@ -88,6 +91,11 @@ in the most volatile layer that fits.
   in this project root (`.claude/skills/<name>/SKILL.md`, auto-discovered
   by the runtime). The mount point is gitignored — what a user mounts is
   their own choice, never committed; create the directory on demand.
+  Exception: `.claude/skills/pm-growth-coach/` is a first-party skill
+  shipped with this repo (tracked in git). It is Coach 型 by design — no
+  routing-cache row or compat test needed before use — but remains bound
+  by SOUL's Skill Usage principles, and its journey/dimension data lives
+  in `memory/growth/` under the standard materialize mechanics.
 - Skill selection criteria live in `SKILLS.md` (stable, shared, committed).
   The routing cache itself — which skills you've actually classified/tested,
   and their verdict — is per-user/per-environment data and lives in

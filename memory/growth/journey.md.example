@@ -1,0 +1,42 @@
+# 成長 Journey（本機，不進版控）
+
+<!-- 一位使用者一份。完整盤點與每次回訪後由 coach 更新；
+     流程與節奏見 .claude/skills/pm-growth-coach/。
+     寫入後同步更新 MEMORY.md 的 Growth 索引行（含 next checkpoint）。 -->
+
+last-verified: （尚未填寫）
+
+## 構面集
+
+（default ＝ skill 內建八構面；自定義時寫 `memory/growth/dimensions.md`
+並在此註記啟用日期。中途切換構面集要在「盤點紀錄」留一行切換註記，
+切換前後的分數不互相比較。）
+
+## 盤點紀錄
+
+<!-- 每輪完整盤點一個小節，最新在上。 -->
+
+### YYYY-MM-DD
+
+| 構面 | 分數 (0–7) | 一句理由 |
+|---|---|---|
+
+（不適用而跳過的構面記「n/a＋原因」）
+
+## 當前焦點
+
+- 構面：
+- As-is：
+- To-be：
+- Actions（2–3 個，含狀態：todo / done / 改版 / 刪除）：
+- Timeframe 與成功訊號：
+- Next checkpoint：YYYY-MM-DD（micro / focus review / 完整盤點）
+
+## Follow-up history
+
+<!-- 一行一次回訪，最新在上：日期、類型（micro / focus / full / setback）、
+     重點一句話、計畫變動。setback 記「學到什麼、計畫怎麼改」，不寫失敗標籤。 -->
+
+## 歷史焦點
+
+<!-- 已完成或已切換的焦點構面：期間、當時的 To-be、結果一句話。 -->
