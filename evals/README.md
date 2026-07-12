@@ -98,8 +98,32 @@ SIM=1 bash evals/skill-standalone.sh .claude/skills/pm-growth-coach \
 （與 skill-compat 的個人掃描腳本不同）。同樣跑 3 輪以上、≥80% 才算綠。
 
 - 一輪 = 15 個 session（T1–T11，T8/T9/T10/T11 含 A/B），分 3 波並行，約 5–6 分鐘，
-  約 20 次 API 呼叫、US$3–4（Sonnet）——這是人工估算數字；每輪跑完會自動
-  產出 `REPORT.md`（見下方「執行報表」）給實測數字，之後應以實測為準。
+  約 20 次 API 呼叫、US$4–5（Sonnet；T11a 一組就佔 $0.65–0.9，它要跑完整的
+  搜尋查證迴圈）——這是人工估算數字；每輪跑完會自動產出 `REPORT.md`
+  （見下方「執行報表」）給實測數字，之後應以實測為準。
+
+## ⚠️ 成本注意事項（2026-07-12 事故記錄）
+
+一次在遠端沙盒（Claude Code on the web）跑的 3 輪迴歸實際花掉 **$17.9**
+（本機基準約 $3–4/輪），最後撞到 org 月度用量上限、評測中途斷頭。超支原因：
+
+1. **遠端沙盒的 proxy 會間歇性擋 WebFetch/TLS**：T11a 的查證迴圈每次被擋
+   都觸發換錨重試、甚至 debug 呼叫，token 白燒；proxy 也會弄壞 session
+   （空 tools.log、API error），逼出補跑——這些成本在本機不存在。
+2. T11a 本身是最貴的測試組（完整搜尋查證是它的本質成本）。
+
+**避免再撞到的做法**：
+
+- **評測一律在本機跑**，不要在遠端沙盒跑——又貴（1.5–2 倍以上）又不穩
+  （INVALID session 率高）。
+- 開發迭代期用 `ONLY=` 跑子集，全套留給 merge 前的最後確認。
+- 可考慮**低階模型做便宜預檢**：迭代中先用 `--model haiku` 之類的低階
+  model 當 coach 跑一輪抓大錯（skill 沒觸發、檔案沒寫入這類程式斷言層的
+  問題），確認無誤再花錢跑正式的 Sonnet 輪。注意：預檢結果**不計入
+  通過率基準**——基準必須是 Sonnet（見「模型分工」1），低階預檢只是
+  省錢的煙霧測試。
+- 跑之前看一眼額度餘裕；撞到 spend limit 時 session 會回傳
+  "You've hit your org's monthly spend limit"，該輪所有後續 turn 都是廢資料。
 - 跑多輪求通過率時**依序跑**（避免 rate limit），例：
   ```bash
   for r in 1 2 3; do RUN_DIR=/tmp/coach-eval-r$r bash evals/run.sh; done
