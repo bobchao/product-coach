@@ -52,4 +52,10 @@ n=$(grep -c "WebSearch" "$R"/t10a/tools.log 2>/dev/null || echo 0)
 [ "$n" -ge 1 ]; ck "T10a: 執行了 WebSearch（$n 次）" $?
 fi
 
+# T11a：案例使用——分享前讀規則檔＋真實查證（憑記憶引用是紅線）
+if ran t11a; then
+grep -q "Read :: .*case-sharing" "$R"/t11a/tools.log 2>/dev/null;       ck "T11a: 讀了 references/case-sharing.md" $?
+grep -q "WebSearch\|WebFetch" "$R"/t11a/tools.log 2>/dev/null;          ck "T11a: 有 WebSearch/WebFetch 查證" $?
+fi
+
 exit $fail

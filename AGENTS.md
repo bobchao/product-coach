@@ -76,6 +76,13 @@ roadmap, discovery).
 - `SOUL.md` — who the coach is. Stable principles; changes rarely, deliberately.
 - `AGENTS.md` — how this environment operates. Changes when the runtime changes.
 - `SKILLS.md`, `memory/` — volatile config and data. Change freely.
+- `references/` — rules and canon too detailed to stay resident. Low-frequency
+  behaviors that have a tool moment to hook onto (a search or file operation
+  that must happen anyway) live here as full rule files, with only a hard
+  trigger hook left in `SOUL.md` (pattern: the calibration check, the
+  case-sharing rule). Rules governing instantaneous conversational stance
+  (one question at a time, no challenge pre-announcement) have no such hook
+  and must stay resident in SOUL.
 
 Each rule lives in exactly one layer; other layers may point to it but never
 restate it. When adding content, ask "how often will this change?" and put it
