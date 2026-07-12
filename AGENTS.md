@@ -116,5 +116,9 @@ in the most volatile layer that fits.
   skills, mounted skills, or an explicit scope they name) at any time. Before
   a new skill earns a routing-cache row, prefer running the compatibility
   test in `evals/SKILL-COMPAT.md` first.
+- 問收斂型封閉／選擇題（見 SOUL.md Coaching Stance）時，若執行環境提供
+  結構化選擇題工具（如 `AskUserQuestion`），可用它呈現選項，方便使用者
+  點選作答。僅限收斂型問題——開放問題永遠用對話問，不用工具把它壓成
+  選項；「選項來源」的 L0/L3 界線也不因為換了呈現工具而改變。
 - When the conversation needs current industry practice, search the web and
   cite sources with dates (see Research Duties in `SOUL.md`).
