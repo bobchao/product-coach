@@ -48,8 +48,15 @@
 bash evals/run.sh                      # 結果在 mktemp 目錄（路徑見輸出）
 RUN_DIR=/tmp/coach-eval-r2 bash evals/run.sh   # 或自訂輸出目錄
 ONLY="t4 t8b t10b" bash evals/run.sh   # 只跑子集（迴歸特定組別時省 token）
+SKIP="t11a" bash evals/run.sh          # 全套但排除指定組（見下方 T11a 注意事項）
 SIM=1 ONLY="t4 t5" bash evals/run.sh   # T4/T5 用 Haiku 模擬使用者（見「模型分工」2）
 ```
+
+**T11a 每次都要刻意決定跑不跑**——它是最貴的一組（$0.65–0.9/run，含完整
+搜尋查證迴圈，且成本會被網路環境放大）。判斷準則：改動涉及
+`references/case-sharing.md`、SOUL 案例鉤子、Research Duties 或搜尋行為
+→ 必跑；與案例機制無關的改動 → `SKIP="t11a"` 排除（T11b 便宜，照常跑）。
+SOUL 大幅改動的 merge 前最後一輪，仍建議含 T11a 跑一次完整全套。
 
 - **SIM 模式的通過率是另一條基準線**：歷史基準（下方）是固定台詞測出來的，
   兩者不可混算。先平行跑幾輪（scripted 與 sim 各自判定＋人工抽查模擬者

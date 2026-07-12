@@ -63,9 +63,11 @@ t11b(){ setup_dir t11b user-seed
         run_turn t11b 4 "我打算直接去找 CS 主管談，把「自願報名的商家」跟「被打擾的客戶」分開處理。幫我想想這場談話。"; }
 
 # ONLY="t4 t8b t10b" bash evals/run.sh → 只跑子集（迴歸特定組別時省 token）
-want() { [ -z "$ONLY" ] || [[ " $ONLY " == *" $1 "* ]]; }
+# SKIP="t11a" bash evals/run.sh       → 跑全套但排除指定組（t11a 是最貴的一組，
+#                                        與改動無關時建議明確排除，見 README 成本注意事項）
+want() { [[ " $SKIP " != *" $1 "* ]] && { [ -z "$ONLY" ] || [[ " $ONLY " == *" $1 "* ]]; }; }
 
-log "=== eval run start (ONLY='${ONLY:-all}' SIM='${SIM:-0}') ==="
+log "=== eval run start (ONLY='${ONLY:-all}' SKIP='${SKIP:-none}' SIM='${SIM:-0}') ==="
 # wave 1
 for t in t1 t2 t3 t6 t9a; do want $t && $t & done
 wait
