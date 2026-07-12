@@ -87,6 +87,6 @@ run_turn() { # $1=testdir $2=turn_no $3=message
     jq -r 'select(.type=="result") | .result' "$raw"
     echo
   } >> "$d/transcript.md"
-  jq -r 'select(.type=="assistant") | .message.content[]? | select(.type=="tool_use") | "turn'"$n"': " + .name + " :: " + ((.input.skill // .input.query // .input.file_path // .input.command // "") | tostring | .[0:120])' "$raw" >> "$d/tools.log" 2>/dev/null
+  jq -r 'select(.type=="assistant") | .message.content[]? | select(.type=="tool_use") | "turn'"$n"': " + .name + " :: " + ((.input.skill // .input.query // .input.file_path // .input.url // .input.command // "") | tostring | .[0:250])' "$raw" >> "$d/tools.log" 2>/dev/null
   log "$1 turn$n done"
 }
