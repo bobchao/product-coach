@@ -80,10 +80,19 @@ bash evals/skill-compat.sh <skill-dir> <scenario-file>
 ```bash
 bash evals/skill-standalone.sh .claude/skills/pm-growth-coach \
   evals/fixtures/growth-standalone/basic.txt
+SIM=1 bash evals/skill-standalone.sh .claude/skills/pm-growth-coach \
+  evals/fixtures/growth-standalone/basic.txt   # Haiku 模擬使用者（建議預設）
 ```
 
-第一層程式斷言：無認證錯誤、skill 在裸環境有觸發、journey 直接寫進
-工作目錄（skill 不得依賴宿主記憶機制，也不必先問使用者存哪）。
+**建議用 SIM 模式跑**：scripted 模式台詞寫死，五輪跑出來幾乎一樣，
+測不出變化；SIM=1 時開場白取情境腳本第一個 turn，其後由 Haiku 照
+`fixtures/personas/growth-standalone.md` 走位動態生成（第三個參數可
+換 persona）。SIM 與 scripted 是兩條基準線，不可混算；模擬者脫稿或
+未收尾標 `INVALID`，不計入分母（規則同主迴歸的模擬模式）。
+
+第一層程式斷言：（SIM 模式先過 validity gate）無認證錯誤、skill 在
+裸環境有觸發、journey 直接寫進工作目錄（skill 不得依賴宿主記憶機制，
+也不必先問使用者存哪）。
 第二層 judge 檢查項印在輸出的 `STANDALONE.md`。首選情境腳本
 `fixtures/growth-standalone/basic.txt` 是 first-party harness，進版控
 （與 skill-compat 的個人掃描腳本不同）。同樣跑 3 輪以上、≥80% 才算綠。
