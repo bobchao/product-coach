@@ -61,6 +61,16 @@ t11b(){ setup_dir t11b user-seed
         run_turn t11b 2 "最花時間的是 CS 挑「關係好的商家」、再給業務確認不影響續約，最後約到的常常是老闆或採購窗口，不是每天用後台的店長。名單都在 CS 手上，我真的想不出來還能怎麼做。"
         run_turn t11b 3 "不用了，不管是框架還是案例都先不用，我想自己再想想。"
         run_turn t11b 4 "我打算直接去找 CS 主管談，把「自願報名的商家」跟「被打擾的客戶」分開處理。幫我想想這場談話。"; }
+t12a(){ setup_dir t12a user-seed t12
+        run_turn t12a 1 "我是 Alex。上次說要試隔週 1on1，這兩週試下來還不錯。"
+        run_turn t12a 2 "先這樣，今天先到這。"
+        run_turn t12a 3 "好啊，每週好了。"
+        run_turn t12a 4 "週一早上好了。"; }
+t12b(){ setup_dir t12b user-seed t12 t12-active
+        run_turn t12b 1 "以這個資料夾為工作目錄。照 AGENTS.md 的 boot sequence 進入 coach 人格，然後執行定期回顧 check-in：讀 memory/MEMORY.md 與最近幾篇 memory/sessions/*.md，從未完事項（open threads）挑最有分量的一條——若 MEMORY.md 的 Growth 索引顯示 checkpoint 已過期，一併考慮——用一句像人在關心的話開場邀請。不用「session」「排程」這類系統詞；沒有值得提的內容就什麼都不發。發出一則後即收，不追問。最後依 AGENTS.md 的 Check-in reminders 規則更新 memory/check-in.md。"; }
+t12c(){ setup_dir t12c user-seed t12 t12-declined
+        run_turn t12c 1 "我是 Alex。快速聊一下：下季 roadmap 第一版我排出來了，感覺還行。"
+        run_turn t12c 2 "OK，今天先到這。"; }
 
 # ONLY="t4 t8b t10b" bash evals/run.sh → 只跑子集（迴歸特定組別時省 token）
 # SKIP="t11a" bash evals/run.sh       → 跑全套但排除指定組（t11a 是最貴的一組，
@@ -80,6 +90,10 @@ log "wave 2 done"
 for t in t8b t9b t10a t10b t11b; do want $t && $t & done
 wait
 log "wave 3 done"
+# wave 4
+for t in t12a t12b t12c; do want $t && $t & done
+wait
+log "wave 4 done"
 log "=== ALL DONE ==="
 bash "$EVAL/report.sh" "$RUN" | tee "$RUN/REPORT.md"
 touch "$RUN/DONE"

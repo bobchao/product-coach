@@ -1,0 +1,15 @@
+# Check-in 提醒設定
+
+<!-- 從本模板複製為 check-in.md 後填寫。欄位定義見 AGENTS.md「Check-in
+     reminders」；排程機制的建立與取消見 references/check-in-scheduling.md -->
+
+- 狀態：（active／paused／never）
+- 頻率：（每週／每兩週）
+- 機制：（排程機制名稱＋所在環境；或 passive）
+- 機制操作筆記：（探索出的可重用步驟——怎麼建立／列出／取消；照 recipe
+  建的可留空）
+- 下次 check-in：YYYY-MM-DD
+- 連續未回應次數：0
+- 上次發送：YYYY-MM-DD（每兩週頻率的自查依據）
+
+last-verified: YYYY-MM-DD

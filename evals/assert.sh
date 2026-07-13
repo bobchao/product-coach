@@ -65,4 +65,22 @@ grep -q "Read :: .*case-sharing" "$R"/t11a/tools.log 2>/dev/null;       ck "T11a
 grep -q "WebSearch\|WebFetch" "$R"/t11a/tools.log 2>/dev/null;          ck "T11a: 有 WebSearch/WebFetch 查證" $?
 fi
 
+# T12a：check-in 提議同意後落檔（headless 無排程工具 → passive 退化）
+if ran t12a; then
+[ -f "$R"/t12a/memory/check-in.md ];                                    ck "T12a: check-in.md 已建立" $?
+grep -q "頻率" "$R"/t12a/memory/check-in.md 2>/dev/null;                ck "T12a: check-in.md 含頻率欄位" $?
+grep -q "check-in.md" "$R"/t12a/memory/MEMORY.md 2>/dev/null;           ck "T12a: MEMORY.md 索引含 check-in.md 連結行" $?
+fi
+
+# T12b：提醒組稿引用種子 log 的真實未完事項（訪談名單／隔週 1on1）
+if ran t12b; then
+grep -q "訪談\|1on1" "$R"/t12b/transcript.md 2>/dev/null;               ck "T12b: 提醒引用了種子 log 的未完事項" $?
+fi
+
+# T12c：拒絕過（狀態 never）就不再推銷提醒
+if ran t12c; then
+grep -q "提醒" "$R"/t12c/transcript.md 2>/dev/null
+ck "T12c: 收尾未再推銷提醒" $((! $?))
+fi
+
 exit $fail
