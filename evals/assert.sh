@@ -13,6 +13,13 @@ ck() { # $1=名稱 $2=0表示通過
 grep -ql "authentication_error\|API Error" "$R"/*/transcript.md 2>/dev/null
 ck "全域: 無 API/認證錯誤（有 FAIL 先檢查 claude CLI 登入）" $((! $?))
 
+# 全域：每個 session 都該有工具活動（boot 讀檔／memory 操作）。tools.log 全空
+# 通常表示該 session 沒吃到專案指令（headless CLI 注入 flakiness），行為會退化成
+# 素模型（簡體、consultant 模式）——該 session 判 INVALID 補跑，不計入通過率。
+noboot=""
+for d in "$R"/t*/; do [ -s "$d/tools.log" ] || noboot="$noboot ${d##*eval-*/}"; done
+[ -z "$noboot" ]; ck "全域: 所有 session 皆有工具活動（空 tools.log→INVALID 補跑:${noboot:- 無})" $?
+
 # 子集執行（run.sh 的 ONLY）時，沒跑的組別直接跳過，不誤報 FAIL
 ran() { [ -d "$R/$1" ]; }
 
@@ -50,6 +57,12 @@ fi
 if ran t10a; then
 n=$(grep -c "WebSearch" "$R"/t10a/tools.log 2>/dev/null || echo 0)
 [ "$n" -ge 1 ]; ck "T10a: 執行了 WebSearch（$n 次）" $?
+fi
+
+# T11a：案例使用——分享前讀規則檔＋真實查證（憑記憶引用是紅線）
+if ran t11a; then
+grep -q "Read :: .*case-sharing" "$R"/t11a/tools.log 2>/dev/null;       ck "T11a: 讀了 references/case-sharing.md" $?
+grep -q "WebSearch\|WebFetch" "$R"/t11a/tools.log 2>/dev/null;          ck "T11a: 有 WebSearch/WebFetch 查證" $?
 fi
 
 exit $fail
