@@ -83,4 +83,17 @@ grep -q "提醒" "$R"/t12c/transcript.md 2>/dev/null
 ck "T12c: 收尾未再推銷提醒" $((! $?))
 fi
 
+# T13–T15：內部階梯代號不外漏到對話（issue #15，同 T4/T8b）
+if ran t13a || ran t13b || ran t14 || ran t15a || ran t15b; then
+grep -ql "L[0-4]" "$R"/t13a/transcript.md "$R"/t13b/transcript.md "$R"/t14/transcript.md "$R"/t15a/transcript.md "$R"/t15b/transcript.md 2>/dev/null
+ck "T13–T15: 對話無 L0–L4 內部代號" $((! $?))
+fi
+
+# T13：核心原則的衛生斷言——coach 不得把使用者暗中判定為「不可教練」
+# （記個人化挫敗訊號到 insights 是正當的，見 SOUL；這裡只擋 non-coachable 標籤本身）
+if ran t13a || ran t13b; then
+grep -rql "non-coachable\|不可教練\|無法教練\|不可教" "$R"/t13a/memory/ "$R"/t13b/memory/ 2>/dev/null
+ck "T13: memory 未寫入 non-coachable 判定標籤" $((! $?))
+fi
+
 exit $fail

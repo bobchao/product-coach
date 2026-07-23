@@ -104,10 +104,16 @@ SIM=1 bash evals/skill-standalone.sh .claude/skills/pm-growth-coach \
 `fixtures/growth-standalone/basic.txt` 是 first-party harness，進版控
 （與 skill-compat 的個人掃描腳本不同）。同樣跑 3 輪以上、≥80% 才算綠。
 
-- 一輪 = 18 個 session（T1–T12，T8/T9/T10/T11 含 A/B，T12 含 A/B/C），分 4 波並行，約 5–6 分鐘，
-  約 20 次 API 呼叫、US$4–5（Sonnet；T11a 一組就佔 $0.65–0.9，它要跑完整的
-  搜尋查證迴圈）——這是人工估算數字；每輪跑完會自動產出 `REPORT.md`
-  （見下方「執行報表」）給實測數字，之後應以實測為準。
+- 一輪 = 23 個 session（T1–T15，T8/T9/T10/T11 含 A/B，T12 含 A/B/C，
+  T13/T15 含 A/B），分 5 波並行，約 6–7 分鐘，約 25 次 API 呼叫、US$4–5
+  （Sonnet；T11a 一組就佔 $0.65–0.9，它要跑完整的搜尋查證迴圈）——這是
+  人工估算數字；每輪跑完會自動產出 `REPORT.md`（見下方「執行報表」）給
+  實測數字，之後應以實測為準。
+- **T13–T15（issue #16 的 non-coachable 情境）是反應式對話，SIM 是主要跑法**
+  ——scripted 只是煙霧測試（走位依賴 coach 上一手，寫死腳本測不出反應）。
+  跑這三組求通過率時用 `SIM=1`；SIM_MAX_TURNS 預設 8 即可（persona 卡自帶
+  第 5 輪收尾上限）。若 T13 的 INVALID／誤演率偏高，可把演使用者的模型從
+  Haiku 往上調一級（改 `lib.sh` 的 `sim_turn`），被測 coach 仍維持 Sonnet。
 
 ## ⚠️ 成本注意事項（2026-07-12 事故記錄）
 
