@@ -17,7 +17,7 @@ ck "全域: 無 API/認證錯誤（有 FAIL 先檢查 claude CLI 登入）" $((!
 # 通常表示該 session 沒吃到專案指令（headless CLI 注入 flakiness），行為會退化成
 # 素模型（簡體、consultant 模式）——該 session 判 INVALID 補跑，不計入通過率。
 noboot=""
-for d in "$R"/t*/; do [ -s "$d/tools.log" ] || noboot="$noboot ${d##*eval-*/}"; done
+for d in "$R"/t*/; do [ -s "$d/tools.log" ] || noboot="$noboot $(basename "$d")"; done
 [ -z "$noboot" ]; ck "全域: 所有 session 皆有工具活動（空 tools.log→INVALID 補跑:${noboot:- 無})" $?
 
 # 子集執行（run.sh 的 ONLY）時，沒跑的組別直接跳過，不誤報 FAIL
