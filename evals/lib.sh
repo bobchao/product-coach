@@ -10,6 +10,22 @@
 # 此 env var 官方定義為最高優先、覆蓋所有設定，正是給自動化環境用的。可用外部環境覆寫。
 export CLAUDE_CODE_DISABLE_AUTO_MEMORY="${CLAUDE_CODE_DISABLE_AUTO_MEMORY:-1}"
 
+# 隔離使用者層設定目錄（issue #21 第二肇因）：~/.claude/skills/ 的 user-global skill
+# 會在 turn1 搶走回合（實測 colleague-bobcat），boot sequence 因此沒跑。這類 skill 掛在
+# 使用者層，與 cwd 無關，setup_dir 排除專案 .claude/skills 擋不到。CLAUDE_CONFIG_DIR 會
+# 把所有 ~/.claude 路徑改指到指定目錄，用一個空的 scratch 目錄即可讓評測 hermetic：
+# 不吃本機掛了什麼 skill／個人設定。T8a 不受影響——它的 skill 是 fixture overlay 疊進
+# 測試副本的專案層 .claude/skills/，不走使用者層。
+# 憑證要帶進去，否則子行程會 401（macOS 走 Keychain 時不需要，複製失敗不致命）。
+if [ -z "$CLAUDE_CONFIG_DIR" ]; then
+  EVAL_HOME="$RUN/.claude-home"
+  mkdir -p "$EVAL_HOME"
+  for src in "$HOME/.claude" "$HOME/.config/claude"; do
+    [ -f "$src/.credentials.json" ] && cp "$src/.credentials.json" "$EVAL_HOME/" 2>/dev/null
+  done
+  export CLAUDE_CONFIG_DIR="$EVAL_HOME"
+fi
+
 log() { echo "[$(date '+%H:%M:%S')] $*" >> "$LOG"; }
 
 setup_dir() { # $1=testname, $2...=fixture overlays (dir names under FIX)
