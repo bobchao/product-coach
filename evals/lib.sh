@@ -10,46 +10,16 @@
 # 此 env var 官方定義為最高優先、覆蓋所有設定，正是給自動化環境用的。可用外部環境覆寫。
 export CLAUDE_CODE_DISABLE_AUTO_MEMORY="${CLAUDE_CODE_DISABLE_AUTO_MEMORY:-1}"
 
-# 隔離使用者層設定目錄（issue #21 第二肇因）：~/.claude/skills/ 的 user-global skill
-# 會在 turn1 搶走回合（實測 colleague-bobcat），boot sequence 因此沒跑。這類 skill 掛在
-# 使用者層，與 cwd 無關，setup_dir 排除專案 .claude/skills 擋不到。CLAUDE_CONFIG_DIR 會
-# 把所有 ~/.claude 路徑改指到指定目錄，用一個空的 scratch 目錄即可讓評測 hermetic：
-# 不吃本機掛了什麼 skill／個人設定。T8a 不受影響——它的 skill 是 fixture overlay 疊進
-# 測試副本的專案層 .claude/skills/，不走使用者層。
-# 做法是「鏡射」而非空目錄：把真實 config dir 的每個項目 symlink 進 scratch home，
-# 唯獨 skills/ 換成空目錄。空目錄版試過會連登入態一起隔離掉（憑證在 macOS Keychain，
-# 沒有 .credentials.json 可複製，整輪空跑 "Not logged in"），鏡射則保留憑證與設定。
-# 這樣擋掉的是所有 user-global skills，不是只針對某一個。
-if [ -z "$CLAUDE_CONFIG_DIR" ]; then
-  real_cfg=""
-  for c in "$HOME/.claude" "$HOME/.config/claude"; do [ -d "$c" ] && { real_cfg="$c"; break; }; done
-  if [ -n "$real_cfg" ]; then
-    # 安全：這個目錄會放使用者 config 的副本與指向憑證的 symlink，必須是私有的。
-    # 不能靠 $RUN 的權限——RUN_DIR 由呼叫端指定時是 mkdir 的預設 umask（常見 755），
-    # 只有 mktemp 那條路徑才是 700。這裡明確建成 700，且在寫入前就設好。
-    EVAL_HOME="$RUN/.claude-home"
-    mkdir -p "$EVAL_HOME" && chmod 700 "$EVAL_HOME"
-    # 不鏡射的項目：skills（要擋掉的污染源）＋ 會被 CLI 回寫的執行痕跡（symlink 出去會
-    # 讓每輪評測把 session 檔堆進使用者真實的 ~/.claude，實測過的洩漏）。
-    for entry in "$real_cfg"/* "$real_cfg"/.[!.]*; do
-      [ -e "$entry" ] || continue
-      name="$(basename "$entry")"
-      case "$name" in
-        skills|projects|sessions|history.jsonl|file-history|todos|shell-snapshots) continue ;;
-      esac
-      [ -e "$EVAL_HOME/$name" ] || ln -s "$entry" "$EVAL_HOME/$name"
-    done
-    mkdir -p "$EVAL_HOME/skills"
-    # 登入態判定實際依賴 $HOME/.claude.json（在 ~/.claude/ 之外，鏡射迴圈掃不到）。
-    # 用複製而非 symlink：CLI 會回寫這個檔，複製可讓寫入留在 scratch，不動使用者本尊。
-    # 這個檔可能含帳號資訊、組織 ID，某些設定下還有 API key——用 umask 077 在**建立當下**
-    # 就是 600，不要先 cp（預設 644）再 chmod，那中間有一段可讀的空窗。
-    if [ -f "$HOME/.claude.json" ] && [ ! -e "$EVAL_HOME/.claude.json" ]; then
-      ( umask 077; cp "$HOME/.claude.json" "$EVAL_HOME/.claude.json" )
-    fi
-    export CLAUDE_CONFIG_DIR="$EVAL_HOME"
-  fi
-fi
+# issue #21 第二肇因（user-global skills 在 turn1 搶走回合，boot sequence 因此沒跑）
+# 目前**沒有**在 harness 層解決，且不要再用 CLAUDE_CONFIG_DIR 去解——已實測失敗三次：
+# 憑證不在檔案系統裡，macOS Keychain 的 service name 綁 config dir 路徑的 hash
+# （`Claude Code-credentials-<hash>`），所以無論用空目錄或鏡射，只要改 CLAUDE_CONFIG_DIR
+# 登入態就一定掉（整輪空跑 "Not logged in"、$0）。鏡射版還會產生 symlink 回寫穿透，
+# 把 CLI 對 scratch 的寫入導回使用者真實的 ~/.claude/——比它想解的問題更危險。
+#
+# 現行做法：跑評測前，自行把會搶回合的 user-global skill 移開（見 evals/README.md），
+# 並靠 assert.sh 的 boot 斷言把未 boot 的 session 標出來、不計入通過率。
+# 呼叫端仍可自行預設 CLAUDE_CONFIG_DIR（harness 尊重外部值，但請自負登入態風險）。
 
 log() { echo "[$(date '+%H:%M:%S')] $*" >> "$LOG"; }
 

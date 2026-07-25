@@ -146,19 +146,26 @@ SIM=1 bash evals/skill-standalone.sh .claude/skills/pm-growth-coach \
 - 技術備註：runner 刻意不用 `set -u`（macOS bash 3.2 會把空陣列展開當
   unbound variable，曾因此整輪秒掛）。
 
-## ⚠️ harness 會碰到你的使用者設定（issue #21）
+## ⚠️ 跑評測前：把 user-global skills 移開（issue #21，尚未自動化）
 
-為了讓評測 hermetic（不吃本機掛了什麼 skill），`lib.sh` 會把 `CLAUDE_CONFIG_DIR`
-指到 `<RUN_DIR>/.claude-home`，內容是真實 config dir 的鏡射（symlink），但
-**排除 `skills/`**（污染源）與會被回寫的執行痕跡（`projects`、`sessions`、
-`history.jsonl` 等，避免評測資料堆進你的個人 config）。登入態需要的
-`~/.claude.json` 是**複製**進去的。
+`~/.claude/skills/` 底下的 skill 會在 turn 1 搶走回合（實測 `colleague-bobcat`），
+boot sequence（`CLAUDE.md → AGENTS.md → SOUL.md`）因此沒跑，該 session 退化成
+素模型、資料無效。這類 skill 掛在**使用者層**，與 cwd 無關，`setup_dir` 排除
+專案 `.claude/skills` 擋不到。
 
-因此該目錄含帳號層級的設定資料：**建成 700、`.claude.json` 以 umask 077 建立
-（權限 600）**。但 `RUN_DIR` 本身若由你指定，是 `mkdir` 的預設權限——**在多人
-共用的機器上，建議讓 runner 自己用 `mktemp`（預設 700），或自行把 RUN_DIR
-建成 700 再跑**。要完全不碰使用者設定，可自行預設 `CLAUDE_CONFIG_DIR`，
-`lib.sh` 會尊重外部值、跳過整段鏡射。
+**目前沒有 harness 層的自動解法**，跑之前請自行把它們移開，例如：
+
+```bash
+mv ~/.claude/skills ~/.claude/skills.off   # 跑完記得移回來
+```
+
+`assert.sh` 的「所有 session 皆有 boot」會把未 boot 的 session 標出來——**未 boot
+的 run 不計入通過率分母**（它測到的不是本產品）。
+
+**不要用 `CLAUDE_CONFIG_DIR` 來解這件事**：已實測失敗三次。憑證不在檔案系統裡，
+macOS Keychain 的 service name 綁 config dir 路徑的 hash，所以只要改動它登入態
+就一定掉（整輪空跑 `Not logged in`、$0）；鏡射的變體還會產生 symlink 回寫穿透，
+把寫入導回你真實的 `~/.claude/`。
 
 ## 判定（三層）
 
