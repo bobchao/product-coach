@@ -16,14 +16,25 @@ export CLAUDE_CODE_DISABLE_AUTO_MEMORY="${CLAUDE_CODE_DISABLE_AUTO_MEMORY:-1}"
 # 把所有 ~/.claude 路徑改指到指定目錄，用一個空的 scratch 目錄即可讓評測 hermetic：
 # 不吃本機掛了什麼 skill／個人設定。T8a 不受影響——它的 skill 是 fixture overlay 疊進
 # 測試副本的專案層 .claude/skills/，不走使用者層。
-# 憑證要帶進去，否則子行程會 401（macOS 走 Keychain 時不需要，複製失敗不致命）。
+# 做法是「鏡射」而非空目錄：把真實 config dir 的每個項目 symlink 進 scratch home，
+# 唯獨 skills/ 換成空目錄。空目錄版試過會連登入態一起隔離掉（憑證在 macOS Keychain，
+# 沒有 .credentials.json 可複製，整輪空跑 "Not logged in"），鏡射則保留憑證與設定。
+# 這樣擋掉的是所有 user-global skills，不是只針對某一個。
 if [ -z "$CLAUDE_CONFIG_DIR" ]; then
-  EVAL_HOME="$RUN/.claude-home"
-  mkdir -p "$EVAL_HOME"
-  for src in "$HOME/.claude" "$HOME/.config/claude"; do
-    [ -f "$src/.credentials.json" ] && cp "$src/.credentials.json" "$EVAL_HOME/" 2>/dev/null
-  done
-  export CLAUDE_CONFIG_DIR="$EVAL_HOME"
+  real_cfg=""
+  for c in "$HOME/.claude" "$HOME/.config/claude"; do [ -d "$c" ] && { real_cfg="$c"; break; }; done
+  if [ -n "$real_cfg" ]; then
+    EVAL_HOME="$RUN/.claude-home"
+    mkdir -p "$EVAL_HOME"
+    for entry in "$real_cfg"/* "$real_cfg"/.[!.]*; do
+      [ -e "$entry" ] || continue
+      name="$(basename "$entry")"
+      [ "$name" = "skills" ] && continue
+      [ -e "$EVAL_HOME/$name" ] || ln -s "$entry" "$EVAL_HOME/$name"
+    done
+    mkdir -p "$EVAL_HOME/skills"
+    export CLAUDE_CONFIG_DIR="$EVAL_HOME"
+  fi
 fi
 
 log() { echo "[$(date '+%H:%M:%S')] $*" >> "$LOG"; }

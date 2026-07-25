@@ -10,7 +10,9 @@ ck() { # $1=名稱 $2=0表示通過
 }
 
 # 全域：任何 session 都不該出現 API 錯誤（常見原因：claude CLI OAuth 過期 → 全數 401）
-grep -ql "authentication_error\|API Error" "$R"/*/transcript.md 2>/dev/null
+# "Not logged in" 是實測過的漏網樣態（CLAUDE_CONFIG_DIR 隔離掉 Keychain 憑證時，整輪
+# 空跑、$0、tools.log 全空，卻不含 authentication_error 字樣 → 這條會假綠燈放行）。
+grep -ql "authentication_error\|API Error\|Not logged in\|Please run /login" "$R"/*/transcript.md 2>/dev/null
 ck "全域: 無 API/認證錯誤（有 FAIL 先檢查 claude CLI 登入）" $((! $?))
 
 # 全域：每個 session 都該有工具活動（boot 讀檔／memory 操作）。tools.log 全空
