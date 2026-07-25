@@ -24,8 +24,11 @@ if [ -z "$CLAUDE_CONFIG_DIR" ]; then
   real_cfg=""
   for c in "$HOME/.claude" "$HOME/.config/claude"; do [ -d "$c" ] && { real_cfg="$c"; break; }; done
   if [ -n "$real_cfg" ]; then
+    # 安全：這個目錄會放使用者 config 的副本與指向憑證的 symlink，必須是私有的。
+    # 不能靠 $RUN 的權限——RUN_DIR 由呼叫端指定時是 mkdir 的預設 umask（常見 755），
+    # 只有 mktemp 那條路徑才是 700。這裡明確建成 700，且在寫入前就設好。
     EVAL_HOME="$RUN/.claude-home"
-    mkdir -p "$EVAL_HOME"
+    mkdir -p "$EVAL_HOME" && chmod 700 "$EVAL_HOME"
     # 不鏡射的項目：skills（要擋掉的污染源）＋ 會被 CLI 回寫的執行痕跡（symlink 出去會
     # 讓每輪評測把 session 檔堆進使用者真實的 ~/.claude，實測過的洩漏）。
     for entry in "$real_cfg"/* "$real_cfg"/.[!.]*; do
@@ -39,8 +42,10 @@ if [ -z "$CLAUDE_CONFIG_DIR" ]; then
     mkdir -p "$EVAL_HOME/skills"
     # 登入態判定實際依賴 $HOME/.claude.json（在 ~/.claude/ 之外，鏡射迴圈掃不到）。
     # 用複製而非 symlink：CLI 會回寫這個檔，複製可讓寫入留在 scratch，不動使用者本尊。
+    # 這個檔可能含帳號資訊、組織 ID，某些設定下還有 API key——用 umask 077 在**建立當下**
+    # 就是 600，不要先 cp（預設 644）再 chmod，那中間有一段可讀的空窗。
     if [ -f "$HOME/.claude.json" ] && [ ! -e "$EVAL_HOME/.claude.json" ]; then
-      cp "$HOME/.claude.json" "$EVAL_HOME/.claude.json" && chmod 600 "$EVAL_HOME/.claude.json"
+      ( umask 077; cp "$HOME/.claude.json" "$EVAL_HOME/.claude.json" )
     fi
     export CLAUDE_CONFIG_DIR="$EVAL_HOME"
   fi

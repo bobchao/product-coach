@@ -146,6 +146,20 @@ SIM=1 bash evals/skill-standalone.sh .claude/skills/pm-growth-coach \
 - 技術備註：runner 刻意不用 `set -u`（macOS bash 3.2 會把空陣列展開當
   unbound variable，曾因此整輪秒掛）。
 
+## ⚠️ harness 會碰到你的使用者設定（issue #21）
+
+為了讓評測 hermetic（不吃本機掛了什麼 skill），`lib.sh` 會把 `CLAUDE_CONFIG_DIR`
+指到 `<RUN_DIR>/.claude-home`，內容是真實 config dir 的鏡射（symlink），但
+**排除 `skills/`**（污染源）與會被回寫的執行痕跡（`projects`、`sessions`、
+`history.jsonl` 等，避免評測資料堆進你的個人 config）。登入態需要的
+`~/.claude.json` 是**複製**進去的。
+
+因此該目錄含帳號層級的設定資料：**建成 700、`.claude.json` 以 umask 077 建立
+（權限 600）**。但 `RUN_DIR` 本身若由你指定，是 `mkdir` 的預設權限——**在多人
+共用的機器上，建議讓 runner 自己用 `mktemp`（預設 700），或自行把 RUN_DIR
+建成 700 再跑**。要完全不碰使用者設定，可自行預設 `CLAUDE_CONFIG_DIR`，
+`lib.sh` 會尊重外部值、跳過整段鏡射。
+
 ## 判定（三層）
 
 **第一層：程式斷言**（每輪必跑）
