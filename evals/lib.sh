@@ -26,13 +26,22 @@ if [ -z "$CLAUDE_CONFIG_DIR" ]; then
   if [ -n "$real_cfg" ]; then
     EVAL_HOME="$RUN/.claude-home"
     mkdir -p "$EVAL_HOME"
+    # 不鏡射的項目：skills（要擋掉的污染源）＋ 會被 CLI 回寫的執行痕跡（symlink 出去會
+    # 讓每輪評測把 session 檔堆進使用者真實的 ~/.claude，實測過的洩漏）。
     for entry in "$real_cfg"/* "$real_cfg"/.[!.]*; do
       [ -e "$entry" ] || continue
       name="$(basename "$entry")"
-      [ "$name" = "skills" ] && continue
+      case "$name" in
+        skills|projects|sessions|history.jsonl|file-history|todos|shell-snapshots) continue ;;
+      esac
       [ -e "$EVAL_HOME/$name" ] || ln -s "$entry" "$EVAL_HOME/$name"
     done
     mkdir -p "$EVAL_HOME/skills"
+    # 登入態判定實際依賴 $HOME/.claude.json（在 ~/.claude/ 之外，鏡射迴圈掃不到）。
+    # 用複製而非 symlink：CLI 會回寫這個檔，複製可讓寫入留在 scratch，不動使用者本尊。
+    if [ -f "$HOME/.claude.json" ] && [ ! -e "$EVAL_HOME/.claude.json" ]; then
+      cp "$HOME/.claude.json" "$EVAL_HOME/.claude.json" && chmod 600 "$EVAL_HOME/.claude.json"
+    fi
     export CLAUDE_CONFIG_DIR="$EVAL_HOME"
   fi
 fi
