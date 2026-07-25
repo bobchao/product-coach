@@ -20,6 +20,15 @@ noboot=""
 for d in "$R"/t*/; do [ -s "$d/tools.log" ] || noboot="$noboot $(basename "$d")"; done
 [ -z "$noboot" ]; ck "全域: 所有 session 皆有工具活動（空 tools.log→INVALID 補跑:${noboot:- 無})" $?
 
+# 全域：每個 session 都該有 boot——讀過 AGENTS.md 或 SOUL.md（經 Read 或 Bash cat）。
+# 未 boot＝CLI auto-memory 污染（issue #21），該 session 退化成素模型或別的 skill，
+# tools.log 可能非空（例如觸發了 colleague-bobcat）卻仍沒進 coach 人格，資料無效。
+notboot=""
+for d in "$R"/t*/; do
+  grep -Eq " (Read|Bash) :: .*(AGENTS|SOUL)" "$d/tools.log" 2>/dev/null || notboot="$notboot $(basename "$d")"
+done
+[ -z "$notboot" ]; ck "全域: 所有 session 皆有 boot（讀 AGENTS/SOUL；未 boot→#21 污染:${notboot:- 無})" $?
+
 # 子集執行（run.sh 的 ONLY）時，沒跑的組別直接跳過，不誤報 FAIL
 ran() { [ -d "$R/$1" ]; }
 

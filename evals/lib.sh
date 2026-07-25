@@ -3,6 +3,13 @@
 # 避免 run_turn 邏輯 drift。呼叫端需先設好 BASE / FIX / RUN / LOG。
 # （沿用 run.sh 的慣例：不用 set -u，bash 3.2 會把空陣列展開當 unbound variable）
 
+# 關掉 CLI 的自動檔案記憶（issue #21）：CLI 2.1.x 的 auto-memory 會注入一段指向
+# ~/.claude/projects/<slug>/memory/ 的系統提示，跟 CLAUDE.md→AGENTS.md→SOUL.md 的
+# boot sequence 競爭，導致 coach 沒 boot、記憶被寫到 harness 目錄。這是被測產品自己的
+# 記憶系統（專案 memory/，由 AGENTS.md 驅動）之外的一層，評測一律關掉才 hermetic。
+# 此 env var 官方定義為最高優先、覆蓋所有設定，正是給自動化環境用的。可用外部環境覆寫。
+export CLAUDE_CODE_DISABLE_AUTO_MEMORY="${CLAUDE_CODE_DISABLE_AUTO_MEMORY:-1}"
+
 log() { echo "[$(date '+%H:%M:%S')] $*" >> "$LOG"; }
 
 setup_dir() { # $1=testname, $2...=fixture overlays (dir names under FIX)
