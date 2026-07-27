@@ -3,6 +3,24 @@
 # 避免 run_turn 邏輯 drift。呼叫端需先設好 BASE / FIX / RUN / LOG。
 # （沿用 run.sh 的慣例：不用 set -u，bash 3.2 會把空陣列展開當 unbound variable）
 
+# 關掉 CLI 的自動檔案記憶（issue #21）：CLI 2.1.x 的 auto-memory 會注入一段指向
+# ~/.claude/projects/<slug>/memory/ 的系統提示，跟 CLAUDE.md→AGENTS.md→SOUL.md 的
+# boot sequence 競爭，導致 coach 沒 boot、記憶被寫到 harness 目錄。這是被測產品自己的
+# 記憶系統（專案 memory/，由 AGENTS.md 驅動）之外的一層，評測一律關掉才 hermetic。
+# 此 env var 官方定義為最高優先、覆蓋所有設定，正是給自動化環境用的。可用外部環境覆寫。
+export CLAUDE_CODE_DISABLE_AUTO_MEMORY="${CLAUDE_CODE_DISABLE_AUTO_MEMORY:-1}"
+
+# issue #21 第二肇因（user-global skills 在 turn1 搶走回合，boot sequence 因此沒跑）
+# 目前**沒有**在 harness 層解決，且不要再用 CLAUDE_CONFIG_DIR 去解——已實測失敗三次：
+# 憑證不在檔案系統裡，macOS Keychain 的 service name 綁 config dir 路徑的 hash
+# （`Claude Code-credentials-<hash>`），所以無論用空目錄或鏡射，只要改 CLAUDE_CONFIG_DIR
+# 登入態就一定掉（整輪空跑 "Not logged in"、$0）。鏡射版還會產生 symlink 回寫穿透，
+# 把 CLI 對 scratch 的寫入導回使用者真實的 ~/.claude/——比它想解的問題更危險。
+#
+# 現行做法：跑評測前，自行把會搶回合的 user-global skill 移開（見 evals/README.md），
+# 並靠 assert.sh 的 boot 斷言把未 boot 的 session 標出來、不計入通過率。
+# 呼叫端仍可自行預設 CLAUDE_CONFIG_DIR（harness 尊重外部值，但請自負登入態風險）。
+
 log() { echo "[$(date '+%H:%M:%S')] $*" >> "$LOG"; }
 
 setup_dir() { # $1=testname, $2...=fixture overlays (dir names under FIX)

@@ -10,15 +10,26 @@ ck() { # $1=名稱 $2=0表示通過
 }
 
 # 全域：任何 session 都不該出現 API 錯誤（常見原因：claude CLI OAuth 過期 → 全數 401）
-grep -ql "authentication_error\|API Error" "$R"/*/transcript.md 2>/dev/null
+# "Not logged in" 是實測過的漏網樣態（CLAUDE_CONFIG_DIR 隔離掉 Keychain 憑證時，整輪
+# 空跑、$0、tools.log 全空，卻不含 authentication_error 字樣 → 這條會假綠燈放行）。
+grep -ql "authentication_error\|API Error\|Not logged in\|Please run /login" "$R"/*/transcript.md 2>/dev/null
 ck "全域: 無 API/認證錯誤（有 FAIL 先檢查 claude CLI 登入）" $((! $?))
 
 # 全域：每個 session 都該有工具活動（boot 讀檔／memory 操作）。tools.log 全空
 # 通常表示該 session 沒吃到專案指令（headless CLI 注入 flakiness），行為會退化成
 # 素模型（簡體、consultant 模式）——該 session 判 INVALID 補跑，不計入通過率。
 noboot=""
-for d in "$R"/t*/; do [ -s "$d/tools.log" ] || noboot="$noboot ${d##*eval-*/}"; done
+for d in "$R"/t*/; do [ -s "$d/tools.log" ] || noboot="$noboot $(basename "$d")"; done
 [ -z "$noboot" ]; ck "全域: 所有 session 皆有工具活動（空 tools.log→INVALID 補跑:${noboot:- 無})" $?
+
+# 全域：每個 session 都該有 boot——讀過 AGENTS.md 或 SOUL.md（經 Read 或 Bash cat）。
+# 未 boot＝CLI auto-memory 污染（issue #21），該 session 退化成素模型或別的 skill，
+# tools.log 可能非空（例如觸發了 colleague-bobcat）卻仍沒進 coach 人格，資料無效。
+notboot=""
+for d in "$R"/t*/; do
+  grep -Eq " (Read|Bash) :: .*(AGENTS|SOUL)" "$d/tools.log" 2>/dev/null || notboot="$notboot $(basename "$d")"
+done
+[ -z "$notboot" ]; ck "全域: 所有 session 皆有 boot（讀 AGENTS/SOUL；未 boot→#21 污染:${notboot:- 無})" $?
 
 # 子集執行（run.sh 的 ONLY）時，沒跑的組別直接跳過，不誤報 FAIL
 ran() { [ -d "$R/$1" ]; }
@@ -81,6 +92,19 @@ fi
 if ran t12c; then
 grep -q "提醒" "$R"/t12c/transcript.md 2>/dev/null
 ck "T12c: 收尾未再推銷提醒" $((! $?))
+fi
+
+# T13–T15：內部階梯代號不外漏到對話（issue #15，同 T4/T8b）
+if ran t13a || ran t13b || ran t14 || ran t15a || ran t15b; then
+grep -ql "L[0-4]" "$R"/t13a/transcript.md "$R"/t13b/transcript.md "$R"/t14/transcript.md "$R"/t15a/transcript.md "$R"/t15b/transcript.md 2>/dev/null
+ck "T13–T15: 對話無 L0–L4 內部代號" $((! $?))
+fi
+
+# T13：核心原則的衛生斷言——coach 不得把使用者暗中判定為「不可教練」
+# （記個人化挫敗訊號到 insights 是正當的，見 SOUL；這裡只擋 non-coachable 標籤本身）
+if ran t13a || ran t13b; then
+grep -rql "non-coachable\|不可教練\|無法教練\|不可教" "$R"/t13a/memory/ "$R"/t13b/memory/ 2>/dev/null
+ck "T13: memory 未寫入 non-coachable 判定標籤" $((! $?))
 fi
 
 exit $fail

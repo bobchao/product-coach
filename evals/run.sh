@@ -71,6 +71,48 @@ t12b(){ setup_dir t12b user-seed t12 t12-active
 t12c(){ setup_dir t12c user-seed t12 t12-declined
         run_turn t12c 1 "我是 Alex。快速聊一下：下季 roadmap 第一版我排出來了，感覺還行。"
         run_turn t12c 2 "OK，今天先到這。"; }
+# T13–T15（issue #16：non-coachable 情境）——反應式 persona，SIM 是主要模式，
+# 非 SIM 的 scripted 只是煙霧測試（走位依賴 coach 上一手，寫死腳本測不出反應）。
+t13a(){ setup_dir t13a user-seed
+        if [ -n "$SIM" ]; then
+          run_sim_dialogue t13a "$FIX/personas/t13a.md" "我是 Alex。我這季打算不做 discovery 了，直接照 sales 給的功能清單開發，比較快出貨。"
+        else
+          run_turn t13a 1 "我是 Alex。我這季打算不做 discovery 了，直接照 sales 給的功能清單開發，比較快出貨。"
+          run_turn t13a 2 "你這樣講就好像我完全沒想過一樣，反正你就是覺得我不對啦。"
+          run_turn t13a 3 "好啦，那我再想想。今天先到這。"
+        fi; }
+t13b(){ setup_dir t13b user-seed
+        if [ -n "$SIM" ]; then
+          run_sim_dialogue t13b "$FIX/personas/t13b.md" "我是 Alex。這季目標大概達不到，就是隔壁平台組一直拖我們的需求，我也沒辦法。"
+        else
+          run_turn t13b 1 "我是 Alex。這季目標大概達不到，就是隔壁平台組一直拖我們的需求，我也沒辦法。"
+          run_turn t13b 2 "最近一次是他們排程一直往後延，我催了也沒用。"
+          run_turn t13b 3 "嗯……好像有一段是我這邊可以先動的。今天先到這。"
+        fi; }
+t14() { setup_dir t14 user-seed
+        if [ -n "$SIM" ]; then
+          run_sim_dialogue t14 "$FIX/personas/t14.md" "我是 Alex。今天 review 又被電，我們這 roadmap 根本沒人尊重。"
+        else
+          run_turn t14 1 "我是 Alex。今天 review 又被電，我們這 roadmap 根本沒人尊重。"
+          run_turn t14 2 "就……很煩，不知道啦。"
+          run_turn t14 3 "嗯，講出來好一點了。今天先到這。"
+        fi; }
+t15a(){ setup_dir t15a user-seed
+        if [ -n "$SIM" ]; then
+          run_sim_dialogue t15a "$FIX/personas/t15a.md" "我是 Alex。這季我想先收斂到一個北極星指標，其他指標暫時不看。"
+        else
+          run_turn t15a 1 "我是 Alex。這季我想先收斂到一個北極星指標，其他指標暫時不看。"
+          run_turn t15a 2 "我懂你的點，但我們這個 case 不太一樣——現在指標太散，團隊反而抓不到重點，先收斂我覺得利大於弊。"
+          run_turn t15a 3 "這樣我比較清楚了，今天先到這。"
+        fi; }
+t15b(){ setup_dir t15b user-seed
+        if [ -n "$SIM" ]; then
+          run_sim_dialogue t15b "$FIX/personas/t15b.md" "我是 Alex。我在想怎麼跟工程團隊談一個延期的功能。"
+        else
+          run_turn t15b 1 "我是 Alex。我在想怎麼跟工程團隊談一個延期的功能。"
+          run_turn t15b 2 "唉，這題有點煩。不過我想關鍵應該是工程那邊的估時一直不準。"
+          run_turn t15b 3 "嗯，這樣想通一點了，今天先到這。"
+        fi; }
 
 # ONLY="t4 t8b t10b" bash evals/run.sh → 只跑子集（迴歸特定組別時省 token）
 # SKIP="t11a" bash evals/run.sh       → 跑全套但排除指定組（t11a 是最貴的一組，
@@ -94,6 +136,10 @@ log "wave 3 done"
 for t in t12a t12b t12c; do want $t && $t & done
 wait
 log "wave 4 done"
+# wave 5（T13–T15：non-coachable 情境，issue #16）
+for t in t13a t13b t14 t15a t15b; do want $t && $t & done
+wait
+log "wave 5 done"
 log "=== ALL DONE ==="
 bash "$EVAL/report.sh" "$RUN" | tee "$RUN/REPORT.md"
 touch "$RUN/DONE"
