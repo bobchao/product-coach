@@ -10,16 +10,52 @@
 # 此 env var 官方定義為最高優先、覆蓋所有設定，正是給自動化環境用的。可用外部環境覆寫。
 export CLAUDE_CODE_DISABLE_AUTO_MEMORY="${CLAUDE_CODE_DISABLE_AUTO_MEMORY:-1}"
 
-# issue #21 第二肇因（user-global skills 在 turn1 搶走回合，boot sequence 因此沒跑）
-# 目前**沒有**在 harness 層解決，且不要再用 CLAUDE_CONFIG_DIR 去解——已實測失敗三次：
-# 憑證不在檔案系統裡，macOS Keychain 的 service name 綁 config dir 路徑的 hash
-# （`Claude Code-credentials-<hash>`），所以無論用空目錄或鏡射，只要改 CLAUDE_CONFIG_DIR
-# 登入態就一定掉（整輪空跑 "Not logged in"、$0）。鏡射版還會產生 symlink 回寫穿透，
-# 把 CLI 對 scratch 的寫入導回使用者真實的 ~/.claude/——比它想解的問題更危險。
+# issue #21 第二肇因（user-global skills 在 turn1 搶走回合，boot sequence 因此沒跑）：
+# 用 `--setting-sources project,local` 解——不載入使用者層設定，`~/.claude/skills/`
+# 底下的 skill 因此不進 session（實測 slash_commands 少掉那批），fixture 疊進測試副本的
+# 專案層 `.claude/skills/`（T8a 的 okr skills）不受影響。這條路**不動認證邊界**：
+# 憑證與 CLAUDE_CONFIG_DIR 無關，登入態照舊。
 #
-# 現行做法：跑評測前，自行把會搶回合的 user-global skill 移開（見 evals/README.md），
-# 並靠 assert.sh 的 boot 斷言把未 boot 的 session 標出來、不計入通過率。
+# 不要再用 CLAUDE_CONFIG_DIR 去解這件事——已實測失敗三次：憑證不在檔案系統裡，
+# macOS Keychain 的 service name 綁 config dir 路徑的 hash（`Claude Code-credentials-<hash>`），
+# 所以無論用空目錄或鏡射，只要改 CLAUDE_CONFIG_DIR 登入態就一定掉（整輪空跑
+# "Not logged in"、$0）。鏡射版還會產生 symlink 回寫穿透，把 CLI 對 scratch 的寫入導回
+# 使用者真實的 ~/.claude/——比它想解的問題更危險。
 # 呼叫端仍可自行預設 CLAUDE_CONFIG_DIR（harness 尊重外部值，但請自負登入態風險）。
+# SETTING_SOURCES="" 可關掉這層隔離（跑舊行為對照用）。
+SETTING_SOURCES="${SETTING_SOURCES-project,local}"
+
+# issue #21 第三肇因（沒有污染源，模型單純不去讀 CLAUDE.md 指的 AGENTS.md，
+# tools.log 全空、退化成素模型）：turn 1 用 `--append-system-prompt` 把 boot 指示
+# 從專案檔案搬到系統提示。實測（sonnet，t3／t9b 開場白）：
+#   - 對照組（現行 harness）：0/2 boot
+#   - CLAUDE.md 原句放進系統提示：0/1 boot（軟指示搬通道沒用）
+#   - CLAUDE.md 改成強制語氣、不動系統提示：0/2 boot，且模型當場把它判成
+#     prompt injection、在對話裡跟使用者講明「我不會照做」——比沒 boot 更糟
+#   - 系統提示放同一句強制指示（本檔）：4/4 boot
+# 判讀：決定性的是**通道**不是**措辭**。專案檔案的指示模型可以自行否決，系統提示不會。
+# 這只把「要不要讀」的選擇拿掉，被讀的還是同一批檔案（boot 仍走 Read/Bash，
+# assert.sh 的 boot 斷言照舊成立），不注入任何教練內容。
+# BOOT_PREAMBLE=0 關閉（跑舊行為做 A/B 對照）；裸環境的 harness（skill-standalone）
+# 沒有 AGENTS.md，一律關掉。
+BOOT_PREAMBLE_FILE="${BOOT_PREAMBLE_FILE:-${EVAL:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}/boot-preamble.txt}"
+if [ -z "${BOOT_PREAMBLE+set}" ]; then
+  BOOT_PREAMBLE="$(cat "$BOOT_PREAMBLE_FILE" 2>/dev/null)"
+elif [ "$BOOT_PREAMBLE" = "0" ]; then
+  BOOT_PREAMBLE=""
+fi
+
+# 旗標支援度前檢（純本機，不呼叫 API）：舊版 CLI 遇到不認得的旗標會直接退出，
+# 整輪空跑才發現太貴——寧可退回舊行為並在終端機出聲。
+_claude_help="$(claude --help 2>/dev/null)"
+case "$_claude_help" in *--setting-sources*) ;; *)
+  [ -n "$SETTING_SOURCES" ] && echo "⚠️  這版 claude CLI 不支援 --setting-sources：改用 CLI 預設，使用者層 skill 可能搶走 turn 1（見 evals/README.md，跑之前先 mv ~/.claude/skills）" >&2
+  SETTING_SOURCES="" ;;
+esac
+case "$_claude_help" in *--append-system-prompt*) ;; *)
+  [ -n "$BOOT_PREAMBLE" ] && echo "⚠️  這版 claude CLI 不支援 --append-system-prompt：boot preamble 停用，boot 率會掉回 issue #21 的水準" >&2
+  BOOT_PREAMBLE="" ;;
+esac
 
 log() { echo "[$(date '+%H:%M:%S')] $*" >> "$LOG"; }
 
@@ -51,11 +87,13 @@ $(cat "$d/transcript.md")
 
 ---
 現在輪到你（使用者）發言。只輸出你的下一句話本身，不要任何說明、引號或角色前綴。若走位已完成，在句尾附上 <<END>>。"
+  local ss=(); [ -n "$SETTING_SOURCES" ] && ss=(--setting-sources "$SETTING_SOURCES")
   ( cd "$d/.sim" && claude -p "$prompt" \
       --model haiku \
       --output-format json \
       --allowedTools "" \
-      --max-turns 2 ) > "$raw" 2>> "$d/err.log"
+      --max-turns 2 \
+      "${ss[@]}" ) > "$raw" 2>> "$d/err.log"
   jq -r 'select(.type=="result") | .result // empty' "$raw"
 }
 
@@ -88,7 +126,14 @@ run_turn() { # $1=testdir $2=turn_no $3=message
   local d="$RUN/$1" n=$2 msg=$3
   local raw="$d/turn$n.jsonl" sfile="$d/.session"
   local extra=()
-  [ -s "$sfile" ] && extra=(--resume "$(cat "$sfile")")
+  if [ -s "$sfile" ]; then
+    extra=(--resume "$(cat "$sfile")")
+  elif [ -n "$BOOT_PREAMBLE" ]; then
+    # 只在 turn 1（尚無 session id）注入：往後的 turn 是 --resume，SOUL 已在對話脈絡裡，
+    # 再注一次只會誘發重讀、平白改變成本與 tools.log。
+    extra=(--append-system-prompt "$BOOT_PREAMBLE")
+  fi
+  [ -n "$SETTING_SOURCES" ] && extra=("${extra[@]}" --setting-sources "$SETTING_SOURCES")
   ( cd "$d" && claude -p "$msg" \
       --model sonnet \
       --output-format stream-json --verbose \

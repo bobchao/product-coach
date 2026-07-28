@@ -146,26 +146,62 @@ SIM=1 bash evals/skill-standalone.sh .claude/skills/pm-growth-coach \
 - 技術備註：runner 刻意不用 `set -u`（macOS bash 3.2 會把空陣列展開當
   unbound variable，曾因此整輪秒掛）。
 
-## ⚠️ 跑評測前：把 user-global skills 移開（issue #21，尚未自動化）
+## boot 保證與環境隔離（issue #21）
 
-`~/.claude/skills/` 底下的 skill 會在 turn 1 搶走回合（實測 `colleague-bobcat`），
-boot sequence（`CLAUDE.md → AGENTS.md → SOUL.md`）因此沒跑，該 session 退化成
-素模型、資料無效。這類 skill 掛在**使用者層**，與 cwd 無關，`setup_dir` 排除
-專案 `.claude/skills` 擋不到。
+一個沒 boot 的 session 測到的不是本產品——它是素模型，回答會是條列顧問建議、
+奉承開場、無視種子 memory。歷史上這件事吃掉了迴歸將近一半的預算（單 turn 的組
+boot 率一度只有 5/19），所以 harness 現在**主動保證 boot**，不再靠事前手動整理環境。
+兩層機制都在 `lib.sh`，預設開啟：
 
-**目前沒有 harness 層的自動解法**，跑之前請自行把它們移開，例如：
+| 機制 | 做什麼 | 關掉的方法 |
+|---|---|---|
+| `--setting-sources project,local` | 不載入使用者層設定，`~/.claude/skills/` 的 skill 不進 session（就是會在 turn 1 搶走回合的那批）。fixture 疊進測試副本的**專案層** `.claude/skills/`（T8a 的 okr skills）照常載入。 | `SETTING_SOURCES="" bash evals/run.sh` |
+| turn 1 `--append-system-prompt`（內容見 `boot-preamble.txt`） | 把「先跑 AGENTS.md 的 boot sequence」這句指示從專案檔案搬到系統提示。只在 turn 1 注入；後續 turn 走 `--resume`，SOUL 已在對話脈絡裡。 | `BOOT_PREAMBLE=0 bash evals/run.sh` |
 
-```bash
-mv ~/.claude/skills ~/.claude/skills.off   # 跑完記得移回來
-```
+兩者都會寫進 `run.log` 開頭（`BOOT='on/off' SETTING_SOURCES='...'`），事後看舊
+`RUN_DIR` 才分得出那一輪是怎麼跑的。`assert.sh` 的「所有 session 皆有 boot」仍然
+每輪必看——**未 boot 的 run 不計入通過率分母**。
 
-`assert.sh` 的「所有 session 皆有 boot」會把未 boot 的 session 標出來——**未 boot
-的 run 不計入通過率分母**（它測到的不是本產品）。
+### 為什麼是這兩條（以及為什麼不是別的）
 
-**不要用 `CLAUDE_CONFIG_DIR` 來解這件事**：已實測失敗三次。憑證不在檔案系統裡，
+實測（sonnet，用最會失敗的 t3／t9b 開場白，一次一組）：
+
+| 做法 | boot |
+|---|---|
+| 現行 harness（對照組） | 0/2 |
+| `CLAUDE.md` 原句（`Read and follow the AGENTS.md file.`）放進系統提示 | 0/1 |
+| `CLAUDE.md` 改寫成強制語氣、系統提示不動 | 0/2 |
+| 系統提示放強制指示（現行做法） | 4/4 |
+
+決定性的是**通道**，不是措辭：專案檔案裡的指示模型可以自行否決，系統提示不會。
+第三列尤其要記住——把 `CLAUDE.md` 寫得更強硬**反而更糟**：模型當場把它判定成
+prompt injection，並且在**對話裡對使用者講明「我不會照做」**，等於污染了 transcript
+本身。所以「加強 CLAUDE.md 措辭」這條路已經試過、不要再試。
+
+boot preamble **不注入任何教練內容**：它只叫模型去讀本來就該讀的那些檔案，
+boot 仍然走 Read/Bash（`assert.sh` 的 boot 斷言照舊成立），SOUL 的內容一個字
+也不進系統提示。
+
+**不要用 `CLAUDE_CONFIG_DIR` 做隔離**：已實測失敗三次。憑證不在檔案系統裡，
 macOS Keychain 的 service name 綁 config dir 路徑的 hash，所以只要改動它登入態
 就一定掉（整輪空跑 `Not logged in`、$0）；鏡射的變體還會產生 symlink 回寫穿透，
-把寫入導回你真實的 `~/.claude/`。
+把寫入導回你真實的 `~/.claude/`。`--setting-sources` 不碰認證邊界，這是它跟
+`CLAUDE_CONFIG_DIR` 的關鍵差別。
+
+### ⚠️ 與歷史基準的可比性（第一輪要先做這件事）
+
+boot 保證會讓**分母變乾淨**，但它同時是「每個 session 的系統提示多了一句話」。
+在把新數字跟 [歷史基準](#歷史基準) 混著看之前，先跑一次對照：
+
+```bash
+RUN_DIR=/tmp/coach-eval-boot-on  ONLY="t1 t2 t5" bash evals/run.sh
+RUN_DIR=/tmp/coach-eval-boot-off BOOT_PREAMBLE=0 ONLY="t1 t2 t5" bash evals/run.sh
+```
+
+挑的是**本來就穩定 boot 的多輪組**（t1/t2/t5），所以兩邊都會有有效資料，差異
+才歸因得到 preamble 身上。逐份讀 transcript：姿態、問題密度、收尾行為若無可辨識
+差異，就可以把 boot-on 當新的預設基準；若有差異，記錄下來、並在該組的歷史數字旁
+註明基準已換過。
 
 ## 判定（三層）
 

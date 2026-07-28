@@ -119,7 +119,9 @@ t15b(){ setup_dir t15b user-seed
 #                                        與改動無關時建議明確排除，見 README 成本注意事項）
 want() { [[ " $SKIP " != *" $1 "* ]] && { [ -z "$ONLY" ] || [[ " $ONLY " == *" $1 "* ]]; }; }
 
-log "=== eval run start (ONLY='${ONLY:-all}' SKIP='${SKIP:-none}' SIM='${SIM:-0}') ==="
+# BOOT/SETTING_SOURCES 進 run.log：這兩個開關會改變 boot 率與 hermetic 程度（issue #21），
+# 事後看舊 RUN_DIR 時必須能分辨這輪是用哪種設定跑的，否則通過率無法互相對照。
+log "=== eval run start (ONLY='${ONLY:-all}' SKIP='${SKIP:-none}' SIM='${SIM:-0}' BOOT='$([ -n "$BOOT_PREAMBLE" ] && echo on || echo off)' SETTING_SOURCES='${SETTING_SOURCES:-default}') ==="
 # wave 1
 for t in t1 t2 t3 t6 t9a; do want $t && $t & done
 wait
