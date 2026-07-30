@@ -284,3 +284,10 @@ EXPECTED_MODEL=haiku bash evals/report.sh <RUN_DIR> # 覆寫預期模型（預�
 - 2026-07-06，5 輪 × 13 sessions（Sonnet）：無失敗；T4 的 L4 收尾 3/5、
   T6 過期求證 4/5、T10b 典範標註 3/4，其餘全過。下次迴歸重點看這三項
   與當次 SOUL 改動相關的組別。
+- **⚠️ T1 的舊數字不要沿用**（2026-07-30，issue #21 的 boot-on／boot-off 對照）：
+  boot-off 的 T1 直接跳進 agenda-setting、完全沒有 onboarding 元素，boot-on 才
+  自報 coach 定位並問單一問題。兩者判定不同，代表 T1 的歷史數字很可能是在
+  沒真正進 coach 人格的分支下量出來的——**重跑幾輪重新立基準**。
+  同一次對照裡 T2／T5 兩邊同判定（差別只在 boot-on 讀得更全：多讀
+  `references/product-operating-model.md`、`memory/insights/patterns.md`），
+  這兩組的舊基準可以直接併。
