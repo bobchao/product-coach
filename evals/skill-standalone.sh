@@ -31,6 +31,9 @@ RUN="${RUN_DIR:-$(mktemp -d /tmp/skill-standalone-XXXXXX)}"
 FIX=$EVAL/fixtures
 LOG=$RUN/run.log
 mkdir -p "$RUN"
+# 裸環境沒有 AGENTS.md／SOUL.md，boot preamble（issue #21，見 lib.sh）在這裡不適用——
+# 注了只會叫模型去讀不存在的檔案，也會破壞「skill 完全沒有 coach 時能否自力運作」的前提。
+BOOT_PREAMBLE=0
 . "$EVAL/lib.sh"
 
 NAME=$(basename "$SKILL_DIR")
