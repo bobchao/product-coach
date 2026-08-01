@@ -86,64 +86,73 @@ session**，結束時說「先到這/結束/done」，教練會把這次的重�
 > When starting a session, read the CLAUDE.md file in the project root and follow the instructions there.
 > ```
 
-## 這是怎麼設計的
+## How This Is Designed
 
-想研究或改造這個 agent 的人，從這裡開始。整個設計分三層，各層只放一種內容，
-其他層用引用而不重複陳述，避免規則分散導致不一致：
+Start here if you want to study or adapt this agent. The design has three layers, each holding
+exactly one kind of content — other layers reference it instead of repeating it, so the rules
+don't drift out of sync:
 
-- **人格層(`SOUL.md`)穩定**：定義 coach 是誰，很少變動。
-- **環境層(`AGENTS.md`)隨執行環境調整**：目錄結構、記憶機制、boot sequence。
-- **設定層(`SKILLS.md`、`memory/`)自由變動**：由 coach 在使用過程中自行維護。
+- **Personality layer (`SOUL.md`) is stable**: defines who the coach is; rarely changes.
+- **Environment layer (`AGENTS.md`) adapts to the runtime**: directory layout, memory mechanics,
+  boot sequence.
+- **Configuration layer (`SKILLS.md`, `memory/`) changes freely**: maintained by the coach itself
+  during use.
 
 ```
-├── CLAUDE.md          # 精簡 loader，載入 AGENTS.md
-├── AGENTS.md          # 環境與操作說明：boot sequence、目錄配置、記憶機制
-├── SOUL.md            # 教練的核心人格與行為準則(憲法，優先權最高)
-├── SKILLS.md          # Skill 選用準則 + 已驗證的路由快取
-├── DESIGN.md          # 最初的設計文件與決策脈絡
+├── CLAUDE.md          # Thin loader that pulls in AGENTS.md
+├── AGENTS.md          # Environment & operating instructions: boot sequence, directory layout, memory mechanics
+├── SOUL.md            # The coach's core personality and behavioral rules (the constitution — highest priority)
+├── SKILLS.md          # Skill selection guidelines + a validated routing cache
+├── DESIGN.md          # Original design doc and the reasoning behind it
 ├── references/
-│   └── product-operating-model.md   # product operating model 的權威基準版本
+│   └── product-operating-model.md   # Authoritative baseline for the product operating model
 ├── memory/
-│   ├── MEMORY.md.example   # 記憶索引模板(真正的 MEMORY.md 是 gitignored)
-│   ├── context/            # 公司、產品、團隊的策略 context 模板
-│   ├── user/               # 使用者角色與成長目標檔案模板
-│   ├── sessions/           # 逐次 session 紀錄(執行時建立，gitignored)
-│   └── insights/           # 教練對使用者思考慣性與成長軌跡的觀察模板
+│   ├── MEMORY.md.example   # Memory index template (the real MEMORY.md is gitignored)
+│   ├── context/            # Templates for company/product/team strategic context
+│   ├── user/               # Templates for the user's role and growth goals
+│   ├── sessions/           # Per-session logs (created at runtime, gitignored)
+│   └── insights/           # Templates for the coach's observations on the user's thinking patterns and growth trajectory
 └── evals/
-    ├── README.md           # 評測 runbook：怎麼執行與判定
-    ├── TEST-PLAN.md        # 測試設計與各組通過標準
-    └── run.sh / assert.sh / report.sh   # 執行、程式斷言、成本報表
+    ├── README.md           # Eval runbook: how to run it and how to judge results
+    ├── TEST-PLAN.md        # Test design and pass criteria per suite
+    └── run.sh / assert.sh / report.sh   # Execution, programmatic assertions, cost report
 ```
 
-建議的閱讀路徑：
+Suggested reading order:
 
-1. [`SOUL.md`](SOUL.md) — 設計的核心：coaching 姿態、講話方式、介入階梯
-   (L0–L4：預設純提問，偵測到挫敗訊號才逐級升高介入強度)。
-2. [`AGENTS.md`](AGENTS.md) — boot sequence 與三層記憶(semantic 的
-   `context/`、episodic 的 `sessions/`、教練觀察的 `insights/`)怎麼建立與更新。
-3. [`SKILLS.md`](SKILLS.md) — skill 的選用準則與路由快取，由 coach 自行維護。
+1. [`SOUL.md`](SOUL.md) — the heart of the design: coaching stance, tone of voice, the
+   intervention ladder (L0–L4: pure questions by default, escalating intervention only when
+   frustration signals show up).
+2. [`AGENTS.md`](AGENTS.md) — the boot sequence and the three-layer memory system (semantic
+   `context/`, episodic `sessions/`, the coach's own `insights/`) — how each is created and updated.
+3. [`SKILLS.md`](SKILLS.md) — skill selection guidelines and the routing cache, maintained by the
+   coach itself.
 4. [`references/product-operating-model.md`](references/product-operating-model.md)
-   — 典範基準版本；模型的訓練資料與它衝突時，以它為準。
-5. [`evals/`](evals/) — coaching 品質怎麼驗證：程式斷言 + LLM judge + 人工
-   抽查三層判定，每組跑 3–5 輪、通過率 ≥ 80% 才算綠。
+   — the paradigm's baseline reference; when the model's training data conflicts with it, this
+   file wins.
+5. [`evals/`](evals/) — how coaching quality gets verified: programmatic assertions + LLM judge +
+   manual spot-checks across three tiers, 3–5 runs per suite, ≥80% pass rate to go green.
 
-想看「為什麼這樣設計」，讀 [`DESIGN.md`](DESIGN.md)——最初的設計文件與
-決策考量(含 Marty Cagan〈Product Coaching and AI〉的外部驗證)。注意它是
-設計初期的快照，之後的演進不一定回頭更新；與上述實際檔案不一致時，以檔案為準。
+To see *why* it's designed this way, read [`DESIGN.md`](DESIGN.md) — the original design doc and
+the reasoning behind it (including external validation from Marty Cagan's *Product Coaching and
+AI*). Note that it's a snapshot from early design and isn't necessarily updated as the project
+evolves — where it conflicts with the files above, the files win.
 
-## 改造成你自己的 coach
+## Adapting It Into Your Own Coach
 
-三層分層讓改造有明確的入手點：
+The three-layer split gives you clear places to start adapting:
 
-- **換典範**：改 `SOUL.md` 的 Operating Model 一節，並把 `references/`
-  換成你要的典範基準。
-- **換領域**：同樣的三層結構可以搬到 PM 以外的 coaching(寫作、工程管理……)
-  ——介入階梯、記憶原則、反奉承這些機制與領域無關。
-- **改完跑評測**：照 `evals/README.md` 跑一輪，確認 coaching 姿態沒有跑掉；
-  測試設計在 `evals/TEST-PLAN.md`，可以照同樣格式加你自己的組別。
+- **Swap the paradigm**: edit the Operating Model section in `SOUL.md`, and replace `references/`
+  with your own paradigm's baseline.
+- **Swap the domain**: the same three-layer structure can move to coaching outside PM (writing,
+  engineering management...) — the intervention ladder, memory principles, and anti-sycophancy
+  mechanisms are domain-agnostic.
+- **Run the evals after changes**: run through `evals/README.md` to confirm the coaching stance
+  hasn't drifted; test design lives in `evals/TEST-PLAN.md` — add your own suites in the same
+  format.
 
-歡迎 fork 拿去改。發現問題請開 issue，有改進也歡迎送 PR。
+Forks welcome. Open an issue if you find a problem, and PRs are welcome too.
 
-## 授權
+## License
 
-本 repo 採用 [CC BY-SA 4.0](LICENSE) 授權。
+This repo is licensed under [CC BY-SA 4.0](LICENSE).
